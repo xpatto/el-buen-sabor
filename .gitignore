@@ -1,0 +1,44 @@
+# Maven y Java
+target/
+*.class
+*.jar
+*.war
+*.ear
+hs_err_pid*
+replay_pid*
+
+# Editores y herramientas locales
+.vscode/
+.idea/
+*.iml
+.classpath
+.project
+.settings/
+.factorypath
+.agents/
+.codex/
+*~
+*.swp
+*.swo
+
+# Variables de entorno y logs
+.env
+.env.*
+*.env
+*.log
+logs/
+
+# SQLite y archivos auxiliares
+*.db
+*.db-*
+*.sqlite
+*.sqlite-*
+*.sqlite3
+*.sqlite3-*
+*-journal
+*-wal
+*-shm
+
+# Sistema operativo
+.DS_Store
+Thumbs.db
