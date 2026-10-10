@@ -81,7 +81,7 @@ class ProductionSecurityTests extends SqliteIntegrationTest {
             assertThat(anonymous.statusCode()).isEqualTo(401);
             var authorized = client.send(request("/api/admin/productos").header("Cookie", authenticatedCookie).GET().build(),
                     HttpResponse.BodyHandlers.ofString());
-            assertThat(authorized.statusCode()).isEqualTo(404);
+            assertThat(authorized.statusCode()).isEqualTo(200);
             for (String path : new String[]{"/api/categorias", "/api/productos", "/api/productos?categoria=comida"}) {
                 var response = client.send(request(path).GET().build(), HttpResponse.BodyHandlers.ofString());
                 assertThat(response.statusCode()).isEqualTo(200);

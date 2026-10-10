@@ -18,7 +18,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 class ApiExceptionHandlerTests {
 
     @ParameterizedTest
-    @ValueSource(strings = {"/api/categorias", "/api/productos"})
+    @ValueSource(strings = {"/api/categorias", "/api/productos", "/api/admin/productos"})
     void unexpectedFailureReturnsControlled500WithoutInternalDetails(String endpoint) throws Exception {
         CategoriaService categories = mock(CategoriaService.class);
         ProductoService products = mock(ProductoService.class);
@@ -26,8 +26,9 @@ class ApiExceptionHandlerTests {
                 "SELECT * FROM productos; jdbc:sqlite:/private/menu.db; password=secret");
         when(categories.listarTodas()).thenThrow(failure);
         when(products.listarActivos(null)).thenThrow(failure);
+        when(products.listarTodos()).thenThrow(failure);
         var mvc = MockMvcBuilders.standaloneSetup(
-                new CategoriaController(categories), new ProductoController(products))
+                new CategoriaController(categories), new ProductoController(products), new AdminProductoController(products))
                 .setControllerAdvice(new ApiExceptionHandler()).build();
 
         mvc.perform(get(endpoint))

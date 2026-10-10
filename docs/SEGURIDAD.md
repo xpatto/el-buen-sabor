@@ -37,7 +37,8 @@ ni validan un certificado o un proxy desplegado.
 Un administrador en memoria con rol ADMIN. GET /admin presenta el formulario
 Thymeleaf o una vista provisional autenticada. POST /admin/login y
 POST /admin/logout exigen CSRF. La autenticación cambia el ID de sesión;
-logout invalida la sesión. No hay HTTP Basic, registro público ni CRUD.
+logout invalida la sesión. No hay HTTP Basic ni registro público. La etapa 5
+incorpora la API de gestión de productos descrita en API-ADMINISTRATIVA.md.
 GET /api/categorias y /api/productos siguen públicos. /api/admin/** exige ADMIN;
 401 JSON sin sesión, 403 sin rol, 404 para rutas aún no implementadas con ADMIN.
 Las demás rutas se deniegan salvo los GET públicos expresamente enumerados.
@@ -76,7 +77,7 @@ no se empaqueta en el JAR. No se versionan secretos ni bases SQLite.
 - Las sesiones son locales en memoria: un reinicio requiere nuevo login;
   no se ha diseñado un despliegue con múltiples instancias.
 
-Estos puntos operativos no autorizan funcionalidades de etapa 5.
+Estos puntos operativos siguen pendientes; no autorizan despliegue ni etapa 6.
 
 ## Resultados finales de etapa 4 (2026-10-09)
 

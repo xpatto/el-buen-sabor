@@ -1,7 +1,7 @@
 # El Buen Sabor
 
-Menú digital del restaurante El Buen Sabor. Etapa 4: seguridad y autenticación
-administrativa. Se conserva la API REST pública de lectura sobre SQLite.
+Menú digital del restaurante El Buen Sabor. Etapa 5: API administrativa protegida
+para gestionar productos. Se conserva la API REST pública de lectura sobre SQLite.
 La página temporal sigue mostrando «El Buen Sabor» y «Proyecto inicializado».
 
 ## Tecnologías
@@ -9,7 +9,7 @@ La página temporal sigue mostrando «El Buen Sabor» y «Proyecto inicializado�
 - Java 21 (JDK requerido).
 - Spring Boot 3.5.16.
 - Maven 3.9.11 mediante Maven Wrapper 3.3.4; no requiere Maven instalado.
-- Spring Web, Spring Security, Thymeleaf y Spring Boot Starter Test.
+- Spring Web, Spring Security, Thymeleaf, Validation y Spring Boot Starter Test.
 - Spring Security Test, exclusivamente para pruebas.
 - Spring JDBC mediante `spring-boot-starter-jdbc` 3.5.16 (Spring JDBC 6.2.19,
   HikariCP 6.3.3) y SQLite JDBC de Xerial 3.49.1.0, en alcance runtime.
@@ -147,7 +147,26 @@ Los errores inesperados devuelven `500 Internal Server Error`:
 internas ni mensajes del driver. Conserva los códigos HTTP de Spring MVC,
 cuando la solicitud supera los filtros de seguridad. Las escrituras públicas
 están denegadas: 403 sin CSRF; con CSRF, 401 anónimo o 403 autenticado.
-No hay endpoints de escritura.
+No hay endpoints públicos de escritura.
+
+## API administrativa (etapa 5)
+
+Requiere sesión con ROLE_ADMIN y CSRF válido para POST, PUT y PATCH.
+El contrato completo, ejemplos JSON y el flujo de autenticación están en
+[docs/API-ADMINISTRATIVA.md](docs/API-ADMINISTRATIVA.md).
+
+| Método y ruta | Operación |
+| --- | --- |
+| GET /api/admin/productos | Lista todos, incluidos inactivos, por ID |
+| POST /api/admin/productos | Crea un producto activo; 201 y Location |
+| PUT /api/admin/productos/{id} | Actualiza información, categoría y precio; conserva activo |
+| PATCH /api/admin/productos/{id}/estado | Oculta o reactiva; solo cambia activo |
+
+Nombre de 1–120 caracteres y descripción de 1–2000, sin aceptar valores
+formados solo por espacios. Precio positivo con hasta dos decimales,
+convertido exactamente a centavos long; máximo 92233720368547758.07.
+Categoría existente e identificadores positivos; activo exige un booleano JSON.
+No hay DELETE, gestión de usuarios, panel definitivo ni funcionalidades de etapa 6.
 
 ## Base de datos
 
@@ -179,7 +198,10 @@ Los modelos `Categoria` y `Producto` son records en `domain`; identificadores y
 centavos usan `long`, el estado usa `boolean`. `CategoriaRepository.listarTodas()`,
 `ProductoRepository.listarActivos()` y `listarActivosPorCategoria(String slug)`
 usan `JdbcTemplate` y `RowMapper`, ordenan por ID y parametrizan el slug.
-No hay operaciones de escritura en los repositorios.
+ProductoRepository también lista todos, busca por ID, inserta con SQLite
+INTEGER PRIMARY KEY y RETURNING, edita información y cambia el estado.
+ProductoService agrupa las escrituras y lecturas de respuesta en transacciones.
+El esquema y los scripts de semillas permanecen sin cambios.
 
 Datos iniciales (precios ilustrativos, no información comercial real):
 
@@ -206,8 +228,8 @@ futuros cambios de estructura requerirán una migración explícita.
 ## Alcance y colaboración
 
 Consulta [docs/ALCANCE.md](docs/ALCANCE.md) y [AGENTS.md](AGENTS.md) antes de
-cambiar el proyecto. La autenticación está implementada; el CRUD administrativo
-y la interfaz definitiva siguen pendientes. No hay credenciales de producción
+cambiar el proyecto. La autenticación y la API administrativa están implementadas;
+el panel visual definitivo sigue pendiente. No hay credenciales de producción
 ni bases de datos en el repositorio.
 
 ## Seguridad y autenticación
@@ -235,3 +257,9 @@ terminaron con BUILD SUCCESS; cada comando ejecutó 113 pruebas, con 0 fallidas,
 0 errores y 0 omitidas. Tomcat real verificó redirecciones al puerto efectivo
 443, proxy, CSRF/login y cookies de producción; Boot rechazó el arranque con
 credenciales ausentes o inválidas. Detalles y límites en docs/SEGURIDAD.md.
+
+Cierre de etapa 5 (2026-10-09): ./mvnw clean test y ./mvnw package terminaron
+con BUILD SUCCESS. Cada comando ejecutó 179 pruebas: 179 aprobadas,
+0 fallidas, 0 errores y 0 omitidas. Datos de desarrollo sin modificaciones,
+verificados mediante SHA-256. Resultados, contrato y límites en
+[API-ADMINISTRATIVA.md](docs/API-ADMINISTRATIVA.md).

@@ -60,7 +60,7 @@ La página temporal de la etapa 1 se conserva.
 
 La etapa 3 no incorporó operaciones de escritura ni interfaces definitivas.
 
-## Etapa 4: seguridad y autenticación
+## Etapa 4 completada: seguridad y autenticación
 
 - Spring Security y Thymeleaf; administrador en memoria con BCrypt y
   credenciales externas obligatorias, sin valores predeterminados.
@@ -71,9 +71,29 @@ La etapa 3 no incorporó operaciones de escritura ni interfaces definitivas.
   cookies Secure/HttpOnly/SameSite=Lax y cabeceras de seguridad.
 - Pruebas MockMvc y Tomcat real con SQLite aislado. Resultados de cierre
   en README.md y SEGURIDAD.md.
-- Solo commit local tras verificaciones. Sin push, CRUD administrativo
+- La entrega de etapa 4 se limitó al commit local, sin CRUD administrativo
   ni avance a etapa 5. El despliegue público requiere resolver los riesgos
   operativos documentados en SEGURIDAD.md.
+
+## Etapa 5 completada: API administrativa
+
+- GET /api/admin/productos lista activos e inactivos por identificador.
+- POST registra productos activos y responde 201 con Location.
+- PUT /api/admin/productos/{id} edita nombre, descripción, categoría y precio
+  sin modificar activo; PATCH /{id}/estado modifica exclusivamente activo.
+- AdminProductoController y DTO específicos sobre ProductoService y
+  ProductoRepository existentes, sin duplicar servicios/repositorios.
+- Validation para campos obligatorios y límites (nombre 120, descripción 2000).
+  Precio BigDecimal positivo con máximo dos decimales y conversión exacta a
+  long en centavos; se rechazan desbordamientos, IDs inválidos y categorías
+  inexistentes. Estado JSON estrictamente booleano.
+- JdbcTemplate parametrizado, transacciones y SQLite INTEGER PRIMARY KEY con
+  INSERT RETURNING; esquema y semillas sin modificaciones.
+- ROLE_ADMIN y CSRF conservados. API pública y formulario provisional intactos.
+- Pruebas unitarias, integración SQLite, reinicios, rollback, seguridad y
+  regresión del contrato público; datos de desarrollo protegidos.
+- Documentación del contrato en API-ADMINISTRATIVA.md. Solo commit local tras
+  pruebas. Sin push, panel definitivo, DELETE, despliegue ni etapa 6.
 
 ## Fuera del alcance
 
@@ -94,3 +114,7 @@ terminaron con BUILD SUCCESS; cada comando ejecutó 113 pruebas, con 0 fallidas,
 0 errores y 0 omitidas. Tomcat real verificó redirecciones al puerto efectivo
 443, proxy, CSRF/login y cookies de producción; Boot rechazó el arranque con
 credenciales ausentes o inválidas. Detalles y límites en docs/SEGURIDAD.md.
+
+Cierre de etapa 5 (2026-10-09): clean test y package ejecutaron 179 pruebas
+cada uno; 179 aprobadas, 0 fallidas, 0 errores y 0 omitidas. Datos de desarrollo
+intactos por comparación SHA-256. Contrato y evidencia en API-ADMINISTRATIVA.md.

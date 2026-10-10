@@ -18,6 +18,17 @@ public class ApiExceptionHandler extends ResponseEntityExceptionHandler {
     private static final Logger LOGGER = LoggerFactory.getLogger(ApiExceptionHandler.class);
     private static final ApiError INTERNAL_ERROR = new ApiError("ERROR_INTERNO", "No fue posible procesar la solicitud.");
 
+    @ExceptionHandler(ProductoInvalidoException.class)
+    public ResponseEntity<ApiError> productoInvalido(ProductoInvalidoException exception) {
+        return ResponseEntity.badRequest().body(new ApiError("PRODUCTO_INVALIDO", exception.getMessage()));
+    }
+
+    @ExceptionHandler(ProductoNoEncontradoException.class)
+    public ResponseEntity<ApiError> productoNoEncontrado(ProductoNoEncontradoException exception) {
+        return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                .body(new ApiError("PRODUCTO_NO_ENCONTRADO", exception.getMessage()));
+    }
+
     @ExceptionHandler(CategoriaInvalidaException.class)
     public ResponseEntity<ApiError> categoriaInvalida(CategoriaInvalidaException exception) {
         return ResponseEntity.badRequest().body(new ApiError("CATEGORIA_INVALIDA", exception.getMessage()));

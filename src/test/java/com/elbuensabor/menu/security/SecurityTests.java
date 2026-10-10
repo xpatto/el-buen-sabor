@@ -122,10 +122,16 @@ class SecurityTests extends SqliteIntegrationTest {
     }
 
     @Test
-    void adminPassesSecurityButUnimplementedApiStillReturns404() throws Exception {
+    @org.springframework.transaction.annotation.Transactional
+    void adminCanUseImplementedApiAndUnknownRoutesStillReturn404() throws Exception {
         mvc.perform(get("/api/admin/productos").with(user("admin").roles("ADMIN")))
-                .andExpect(status().isNotFound());
-        mvc.perform(post("/api/admin/productos").with(user("admin").roles("ADMIN")).with(csrf()))
+                .andExpect(status().isOk());
+        mvc.perform(post("/api/admin/productos").with(user("admin").roles("ADMIN")).with(csrf())
+                        .contentType("application/json").content("""
+                                {"nombre":"Prueba","descripcion":"Solo test","precio":1.25,"categoriaId":1}
+                                """))
+                .andExpect(status().isCreated());
+        mvc.perform(get("/api/admin/no-implementado").with(user("admin").roles("ADMIN")))
                 .andExpect(status().isNotFound());
         mvc.perform(post("/api/admin/productos").with(user("admin").roles("ADMIN")))
                 .andExpect(status().isForbidden());
