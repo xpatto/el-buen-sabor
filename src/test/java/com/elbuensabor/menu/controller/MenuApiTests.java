@@ -126,10 +126,10 @@ class MenuApiTests extends SqliteIntegrationTest {
 
     @ParameterizedTest
     @ValueSource(strings = {"POST", "PUT", "PATCH", "DELETE"})
-    void writeMethodsAreNotAllowed(String method) throws Exception {
+    void writeMethodsWithoutCsrfAreForbidden(String method) throws Exception {
         for (String endpoint : new String[]{"/api/categorias", "/api/productos"}) {
             mvc.perform(request(org.springframework.http.HttpMethod.valueOf(method), endpoint))
-                    .andExpect(status().isMethodNotAllowed());
+                    .andExpect(status().isForbidden());
         }
     }
 }

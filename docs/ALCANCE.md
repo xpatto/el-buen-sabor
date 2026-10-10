@@ -43,7 +43,7 @@ La página temporal de la etapa 1 se conserva.
 - Pruebas con bases independientes bajo `target/` o temporales; nunca se usa
   la base de desarrollo para probar ni se versionan archivos SQLite.
 
-## Etapa actual: API REST pública de solo lectura
+## Etapa 3 completada: API REST pública de solo lectura
 
 - Servicios `CategoriaService` y `ProductoService` sobre los repositorios
   existentes, sin modificar el modelo de datos ni añadir dependencias.
@@ -58,8 +58,22 @@ La página temporal de la etapa 1 se conserva.
 - Pruebas unitarias y MockMvc, con integración SQLite aislada y conservación
   de las pruebas anteriores.
 
-No se implementan operaciones de escritura, autenticación ni interfaces definitivas.
-La siguiente etapa requiere una solicitud explícita.
+La etapa 3 no incorporó operaciones de escritura ni interfaces definitivas.
+
+## Etapa 4: seguridad y autenticación
+
+- Spring Security y Thymeleaf; administrador en memoria con BCrypt y
+  credenciales externas obligatorias, sin valores predeterminados.
+- Formulario /admin, login/logout con CSRF, rotación del ID de sesión,
+  errores genéricos y API pública de lectura conservada.
+- /api/admin/** exige ADMIN; el resto no autorizado se deniega.
+- Perfil dev local y prod con HTTPS público 443, proxy confiable explícito,
+  cookies Secure/HttpOnly/SameSite=Lax y cabeceras de seguridad.
+- Pruebas MockMvc y Tomcat real con SQLite aislado. Resultados de cierre
+  en README.md y SEGURIDAD.md.
+- Solo commit local tras verificaciones. Sin push, CRUD administrativo
+  ni avance a etapa 5. El despliegue público requiere resolver los riesgos
+  operativos documentados en SEGURIDAD.md.
 
 ## Fuera del alcance
 
@@ -74,3 +88,9 @@ de ejecución. GitHub ya está configurado con el remoto `origin` hacia
 `https://github.com/xpatto/el-buen-sabor.git`. En esta etapa se realiza un commit
 local después de ejecutar y comunicar las pruebas. Cualquier push o cambio de
 visibilidad requiere autorización explícita; no se realizan cambios remotos.
+
+Cierre de etapa 4 (2026-10-09): `./mvnw clean test` y `./mvnw package`
+terminaron con BUILD SUCCESS; cada comando ejecutó 113 pruebas, con 0 fallidas,
+0 errores y 0 omitidas. Tomcat real verificó redirecciones al puerto efectivo
+443, proxy, CSRF/login y cookies de producción; Boot rechazó el arranque con
+credenciales ausentes o inválidas. Detalles y límites en docs/SEGURIDAD.md.

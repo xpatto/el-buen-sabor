@@ -2,6 +2,8 @@ package com.elbuensabor.menu;
 
 import java.nio.file.Path;
 
+import com.elbuensabor.menu.security.TestAdminCredentials;
+
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 import org.springframework.boot.test.context.ConfigDataApplicationContextInitializer;
@@ -22,7 +24,9 @@ class SqliteRestartTests {
         var application = new ApplicationContextRunner()
                 .withInitializer(new ConfigDataApplicationContextInitializer())
                 .withUserConfiguration(MenuApplication.class)
-                .withPropertyValues("APP_DB_PATH=" + database);
+                .withPropertyValues("APP_DB_PATH=" + database,
+                        "ADMIN_USERNAME=" + TestAdminCredentials.USERNAME,
+                        "ADMIN_PASSWORD_HASH=" + TestAdminCredentials.HASH);
 
         application.run(context -> {
             assertThat(context).hasNotFailed();

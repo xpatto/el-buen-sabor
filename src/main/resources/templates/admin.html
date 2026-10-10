@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Administración — El Buen Sabor</title>
+</head>
+<body>
+<main>
+    <h1>El Buen Sabor</h1>
+    <section th:if="${!administrador}">
+        <h2>Acceso administrativo</h2>
+        <p th:if="${param.error != null}" role="alert">Credenciales incorrectas.</p>
+        <p th:if="${param.logout != null}" role="status">Sesión cerrada.</p>
+        <form th:action="@{/admin/login}" method="post">
+            <p><label for="username">Usuario</label>
+                <input id="username" name="username" autocomplete="username" required></p>
+            <p><label for="password">Contraseña</label>
+                <input id="password" name="password" type="password" autocomplete="current-password" required></p>
+            <button type="submit">Iniciar sesión</button>
+        </form>
+    </section>
+    <section th:if="${administrador}">
+        <h2>Administración provisional</h2>
+        <p>Sesión administrativa iniciada. La gestión de productos estará disponible en una etapa posterior.</p>
+        <form th:action="@{/admin/logout}" method="post">
+            <button type="submit">Cerrar sesión</button>
+        </form>
+    </section>
+    <p><a th:href="@{/}">Volver al menú</a></p>
+</main>
+</body>
+</html>

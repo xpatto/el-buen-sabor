@@ -4,6 +4,8 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 
+import com.elbuensabor.menu.security.TestAdminCredentials;
+
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.DynamicPropertyRegistry;
 import org.springframework.test.context.DynamicPropertySource;
@@ -17,6 +19,8 @@ public abstract class SqliteIntegrationTest {
     static void databaseProperties(DynamicPropertyRegistry registry) {
         // Tiene prioridad sobre APP_DB_PATH y la configuración de desarrollo.
         registry.add("spring.datasource.url", () -> "jdbc:sqlite:" + TEST_DATABASE);
+        registry.add("ADMIN_USERNAME", () -> TestAdminCredentials.USERNAME);
+        registry.add("ADMIN_PASSWORD_HASH", () -> TestAdminCredentials.HASH);
     }
 
     private static Path createDatabasePath() {

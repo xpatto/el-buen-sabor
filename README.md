@@ -1,7 +1,7 @@
 # El Buen Sabor
 
-Menú digital del restaurante El Buen Sabor. Etapa actual: API REST pública de
-solo lectura sobre SQLite, con servicios, DTO y manejo centralizado de errores.
+Menú digital del restaurante El Buen Sabor. Etapa 4: seguridad y autenticación
+administrativa. Se conserva la API REST pública de lectura sobre SQLite.
 La página temporal sigue mostrando «El Buen Sabor» y «Proyecto inicializado».
 
 ## Tecnologías
@@ -9,7 +9,8 @@ La página temporal sigue mostrando «El Buen Sabor» y «Proyecto inicializado�
 - Java 21 (JDK requerido).
 - Spring Boot 3.5.16.
 - Maven 3.9.11 mediante Maven Wrapper 3.3.4; no requiere Maven instalado.
-- Spring Web y Spring Boot Starter Test.
+- Spring Web, Spring Security, Thymeleaf y Spring Boot Starter Test.
+- Spring Security Test, exclusivamente para pruebas.
 - Spring JDBC mediante `spring-boot-starter-jdbc` 3.5.16 (Spring JDBC 6.2.19,
   HikariCP 6.3.3) y SQLite JDBC de Xerial 3.49.1.0, en alcance runtime.
 - Versiones administradas por el parent de Spring Boot; no se utiliza ORM.
@@ -28,6 +29,10 @@ javac -version
 Ambos deben indicar Java 21. Si utilizas `JAVA_HOME`, debe apuntar al JDK 21.
 La primera ejecución requiere Internet para descargar Maven y dependencias.
 El Wrapper utiliza `curl` o `wget` y, según el descargador, `unzip`.
+
+Configura primero `ADMIN_USERNAME` y `ADMIN_PASSWORD_HASH` en el entorno.
+El hash debe ser BCrypt, sin prefijo `{bcrypt}`; no hay valores predeterminados.
+Consulta [docs/SEGURIDAD.md](docs/SEGURIDAD.md). No uses las credenciales de tests.
 
 ```fish
 ./mvnw spring-boot:run
@@ -140,8 +145,9 @@ Los errores inesperados devuelven `500 Internal Server Error`:
 
 `ApiExceptionHandler` centraliza los errores, sin publicar trazas, SQL, rutas
 internas ni mensajes del driver. Conserva los códigos HTTP de Spring MVC,
-como `405 Method Not Allowed` para POST, PUT, PATCH y DELETE. No hay endpoints
-de escritura ni autenticación en esta etapa.
+cuando la solicitud supera los filtros de seguridad. Las escrituras públicas
+están denegadas: 403 sin CSRF; con CSRF, 401 anónimo o 403 autenticado.
+No hay endpoints de escritura.
 
 ## Base de datos
 
@@ -200,9 +206,22 @@ futuros cambios de estructura requerirán una migración explícita.
 ## Alcance y colaboración
 
 Consulta [docs/ALCANCE.md](docs/ALCANCE.md) y [AGENTS.md](AGENTS.md) antes de
-cambiar el proyecto. Seguridad, administración e interfaz
-definitiva están pendientes de etapas posteriores. No hay credenciales ni
-bases de datos en el repositorio.
+cambiar el proyecto. La autenticación está implementada; el CRUD administrativo
+y la interfaz definitiva siguen pendientes. No hay credenciales de producción
+ni bases de datos en el repositorio.
+
+## Seguridad y autenticación
+
+`GET /admin` muestra el formulario de acceso o la administración provisional.
+Login (`POST /admin/login`) y logout (`POST /admin/logout`) requieren CSRF.
+`/api/admin/**` requiere ADMIN: 401 JSON para anónimos, 403 sin rol y 404
+para rutas todavía no implementadas cuando se supera la autorización.
+
+El perfil predeterminado `dev` escucha en 127.0.0.1 por HTTP. Producción
+requiere `SPRING_PROFILES_ACTIVE=prod`, credenciales externas, HTTPS y proxy
+confiable configurado explícitamente. Las cookies llevan Secure en producción,
+HttpOnly y SameSite=Lax, con sesión de 30 minutos. Configuración, resultados
+y riesgos pendientes: [docs/SEGURIDAD.md](docs/SEGURIDAD.md).
 
 ## GitHub
 
@@ -210,3 +229,9 @@ GitHub ya está configurado: el remoto `origin` apunta a
 [xpatto/el-buen-sabor](https://github.com/xpatto/el-buen-sabor).
 Los commits de esta etapa son locales. Todo push o cambio remoto requiere
 autorización explícita. La entrega final requiere un repositorio público.
+
+Cierre de etapa 4 (2026-10-09): `./mvnw clean test` y `./mvnw package`
+terminaron con BUILD SUCCESS; cada comando ejecutó 113 pruebas, con 0 fallidas,
+0 errores y 0 omitidas. Tomcat real verificó redirecciones al puerto efectivo
+443, proxy, CSRF/login y cookies de producción; Boot rechazó el arranque con
+credenciales ausentes o inválidas. Detalles y límites en docs/SEGURIDAD.md.
