@@ -1,9 +1,8 @@
 # El Buen Sabor
 
-Menú digital del restaurante El Buen Sabor. Etapa actual: modelo de datos y
-persistencia SQLite. Incluye modelos inmutables, repositorios de lectura y
-pruebas de integración. La página temporal sigue mostrando «El Buen Sabor»
-y «Proyecto inicializado».
+Menú digital del restaurante El Buen Sabor. Etapa actual: API REST pública de
+solo lectura sobre SQLite, con servicios, DTO y manejo centralizado de errores.
+La página temporal sigue mostrando «El Buen Sabor» y «Proyecto inicializado».
 
 ## Tecnologías
 
@@ -56,7 +55,93 @@ con transacciones. `clean` elimina las bases bajo `target/`, no las de desarroll
 Se verifica arranque, conexión y archivo utilizado, semillas, precios exactos,
 filtros parametrizados, ocultación/reactivación, restricciones SQL, claves
 foráneas en todas las conexiones del pool e idempotencia conservando ediciones.
+Las pruebas unitarias de servicios comprueban validación y conversión exacta de
+centavos a `BigDecimal`. MockMvc verifica JSON, códigos HTTP, los filtros,
+categorías sin activos y errores controlados; la integración usa los mismos
+repositorios y SQLite reales. Los fallos simulados del test de errores pueden
+producir trazas en el log de pruebas: no se incluyen en las respuestas HTTP.
 Los reportes se generan en `target/surefire-reports/`.
+
+## API REST pública
+
+Con la aplicación iniciada mediante `./mvnw spring-boot:run` o el JAR, consulta:
+
+| Solicitud | Respuesta |
+| --- | --- |
+| `GET /api/categorias` | Categorías con `id`, `nombre` y `slug` |
+| `GET /api/productos` | Todos los productos activos |
+| `GET /api/productos?categoria=comida` | Activos de la categoría indicada |
+
+Ejemplos en Fish:
+
+```fish
+curl -i http://localhost:8080/api/categorias
+curl -i http://localhost:8080/api/productos
+curl -i 'http://localhost:8080/api/productos?categoria=comida'
+curl -i 'http://localhost:8080/api/productos?categoria=bebidas'
+curl -i 'http://localhost:8080/api/productos?categoria=tienda'
+```
+
+Respuesta inicial de categorías (`200 OK`):
+
+```json
+[
+  {"id": 1, "nombre": "Comida / Lonchería", "slug": "comida"},
+  {"id": 2, "nombre": "Cafetería y Bebidas", "slug": "bebidas"},
+  {"id": 3, "nombre": "Tienda y Snacks", "slug": "tienda"}
+]
+```
+
+Respuesta inicial con `categoria=comida` (`200 OK`):
+
+```json
+[
+  {
+    "id": 1,
+    "nombre": "Torta de jamón",
+    "categoria": "Comida / Lonchería",
+    "precio": 45.00,
+    "descripcion": "Jamón con queso y verduras."
+  },
+  {
+    "id": 2,
+    "nombre": "Chilaquiles verdes",
+    "categoria": "Comida / Lonchería",
+    "precio": 75.00,
+    "descripcion": "Totopos en salsa verde con crema y queso."
+  }
+]
+```
+
+`categoria` es opcional: omitirlo lista todos los activos, ordenados por ID.
+Los slugs se consultan en SQLite; inicialmente son `comida`, `bebidas` y
+`tienda`. La comparación es exacta, sin recortar espacios ni cambiar mayúsculas.
+Una categoría existente sin productos activos devuelve `200 OK` con `[]`.
+La propiedad `categoria` de cada producto es el nombre legible, no su ID o slug.
+`precio` es un número JSON convertido de centavos con `BigDecimal` a escala 2,
+sin cálculos con `double` o `float`. Los precios de ejemplo son ilustrativos.
+
+Filtro vacío, desconocido o repetido: `400 Bad Request`. Por ejemplo:
+
+```fish
+curl -i 'http://localhost:8080/api/productos?categoria='
+curl -i 'http://localhost:8080/api/productos?categoria=inexistente'
+```
+
+```json
+{"codigo":"CATEGORIA_INVALIDA","mensaje":"La categoría debe ser un único slug existente y no estar vacía."}
+```
+
+Los errores inesperados devuelven `500 Internal Server Error`:
+
+```json
+{"codigo":"ERROR_INTERNO","mensaje":"No fue posible procesar la solicitud."}
+```
+
+`ApiExceptionHandler` centraliza los errores, sin publicar trazas, SQL, rutas
+internas ni mensajes del driver. Conserva los códigos HTTP de Spring MVC,
+como `405 Method Not Allowed` para POST, PUT, PATCH y DELETE. No hay endpoints
+de escritura ni autenticación en esta etapa.
 
 ## Base de datos
 
@@ -115,7 +200,7 @@ futuros cambios de estructura requerirán una migración explícita.
 ## Alcance y colaboración
 
 Consulta [docs/ALCANCE.md](docs/ALCANCE.md) y [AGENTS.md](AGENTS.md) antes de
-cambiar el proyecto. API REST, seguridad, administración e interfaz
+cambiar el proyecto. Seguridad, administración e interfaz
 definitiva están pendientes de etapas posteriores. No hay credenciales ni
 bases de datos en el repositorio.
 

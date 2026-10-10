@@ -28,7 +28,7 @@ La arquitectura futura será un monolito por capas, separando controladores,
 servicios y repositorios conforme se implementen. No se crean capas vacías.
 La página temporal de la etapa 1 se conserva.
 
-## Etapa actual: modelo de datos y persistencia SQLite
+## Etapa 2 completada: modelo de datos y persistencia SQLite
 
 - Spring JDBC y SQLite JDBC de Xerial, con versiones administradas por Boot.
 - `application.properties`: SQLite en `./data/menu.db`, configurable mediante
@@ -43,8 +43,22 @@ La página temporal de la etapa 1 se conserva.
 - Pruebas con bases independientes bajo `target/` o temporales; nunca se usa
   la base de desarrollo para probar ni se versionan archivos SQLite.
 
-No se implementan operaciones de escritura en repositorios, endpoints REST,
-autenticación, servicios sin comportamiento ni interfaces definitivas.
+## Etapa actual: API REST pública de solo lectura
+
+- Servicios `CategoriaService` y `ProductoService` sobre los repositorios
+  existentes, sin modificar el modelo de datos ni añadir dependencias.
+- `GET /api/categorias`: arreglo con `id`, `nombre` y `slug`.
+- `GET /api/productos`: activos con `id`, `nombre`, `categoria` legible,
+  `precio` decimal exacto mediante `BigDecimal` y `descripcion`.
+- Filtro opcional `categoria` por slug validado desde SQLite. Parámetro ausente
+  devuelve todos los activos; vacío, desconocido o repetido devuelve 400.
+  Una categoría existente sin productos activos devuelve 200 con arreglo vacío.
+- DTO de respuesta y manejo centralizado en `ApiExceptionHandler`; los errores
+  inesperados devuelven 500 sin detalles internos.
+- Pruebas unitarias y MockMvc, con integración SQLite aislada y conservación
+  de las pruebas anteriores.
+
+No se implementan operaciones de escritura, autenticación ni interfaces definitivas.
 La siguiente etapa requiere una solicitud explícita.
 
 ## Fuera del alcance
