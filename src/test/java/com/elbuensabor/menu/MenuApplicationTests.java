@@ -1,10 +1,8 @@
 package com.elbuensabor.menu;
 
 import org.junit.jupiter.api.Test;
-import org.springframework.boot.test.context.SpringBootTest;
 
-@SpringBootTest
-class MenuApplicationTests {
+class MenuApplicationTests extends SqliteIntegrationTest {
 
     @Test
     void contextLoads() {
