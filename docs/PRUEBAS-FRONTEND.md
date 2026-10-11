@@ -5,45 +5,11 @@
 Requiere Java 21. Primero ejecutar ./mvnw package para disponer del JAR y las
 dependencias. El perfil dev escucha únicamente en 127.0.0.1 por HTTP.
 
-Configurar ADMIN_USERNAME y ADMIN_PASSWORD_HASH fuera del repositorio. No usar
-las credenciales ficticias de las pruebas. El hash debe ser BCrypt local, con
-coste 12 recomendado; no usar generadores en sitios web ni poner la contraseña
-en el historial de comandos. Una opción sin dependencias nuevas es guardar
-este programa temporal como /tmp/GenerarHash.java:
-
-```java
-import java.util.Arrays;
-import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
-class GenerarHash {
-    public static void main(String[] args) {
-        var console = System.console();
-        if (console == null) throw new IllegalStateException("Ejecutar en una terminal interactiva");
-        char[] password = console.readPassword("Contraseña local nueva: ");
-        if (password == null || password.length == 0) throw new IllegalArgumentException("Contraseña vacía");
-        try {
-            System.out.println(new BCryptPasswordEncoder(12).encode(new String(password)));
-        } finally {
-            Arrays.fill(password, '\0');
-        }
-    }
-}
-```
-
-Ejecutar en una terminal interactiva Fish, con las versiones resueltas por el
-proyecto en esta etapa:
-
-```fish
-java --class-path "$HOME/.m2/repository/org/springframework/security/spring-security-crypto/6.5.11/spring-security-crypto-6.5.11.jar:$HOME/.m2/repository/org/springframework/spring-jcl/6.2.19/spring-jcl-6.2.19.jar" /tmp/GenerarHash.java
-read --prompt-str 'Usuario local: ' ADMIN_USERNAME
-read --silent --prompt-str 'Hash BCrypt generado: ' ADMIN_PASSWORD_HASH
-set -gx ADMIN_USERNAME $ADMIN_USERNAME
-set -gx ADMIN_PASSWORD_HASH $ADMIN_PASSWORD_HASH
-./mvnw spring-boot:run
-```
-
-El hash también es sensible: no compartir la salida de esa terminal ni guardarla
-en Git. Al terminar, detener el servidor y borrar las variables con
-`set -e ADMIN_USERNAME ADMIN_PASSWORD_HASH`. No usar el perfil dev en Internet.
+Configurar ADMIN_USERNAME y ADMIN_PASSWORD_HASH siguiendo el Inicio rápido
+del [README](../README.md) y las alternativas de [EJECUCION-LOCAL.md](EJECUCION-LOCAL.md).
+La utilidad scripts/GenerarHash.java utiliza las dependencias resueltas por Maven,
+lee la contraseña sin eco y escribe el hash en un archivo temporal privado.
+No usar las credenciales ficticias de pruebas ni guardar secretos en Git.
 
 Para comprobaciones manuales que modifiquen productos, usar una base desechable:
 

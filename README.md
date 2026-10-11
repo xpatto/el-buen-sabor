@@ -6,6 +6,107 @@ Dos páginas: menú en / y administración con inicio de sesión en /admin.
 El menú público no muestra un enlace administrativo; se accede escribiendo
 directamente `/admin` en la URL. La autenticación y las operaciones se conservan.
 
+## Inicio rápido
+
+Para uso local. Necesitas **Git, JDK 21** (incluye `java` y `javac`) e Internet
+para la primera descarga de Maven y dependencias. No necesitas Maven instalado,
+Docker ni un servidor de base de datos. Node solo es necesario para las pruebas
+JavaScript. Ejecuta todos los comandos desde una terminal de tu equipo.
+
+### Linux con Fish
+
+```fish
+git clone https://github.com/xpatto/el-buen-sabor.git
+cd el-buen-sabor
+java -version
+javac -version
+```
+
+Ambos comandos Java deben indicar **21**. Si no, selecciona el JDK 21 antes de
+continuar (incluido `JAVA_HOME`, si lo usas). Si GitHub pide acceso, necesitarás
+permiso del propietario mientras el repositorio sea privado. Los cambios del
+cierre son locales hasta que el propietario autorice y realice su publicación.
+
+Prepara las bibliotecas del generador local y configura tus propias credenciales:
+
+```fish
+./mvnw -q dependency:build-classpath -DincludeScope=runtime -Dmdep.outputFile=target/local-classpath.txt
+set -l config_local (mktemp -d)
+java --class-path (cat target/local-classpath.txt) scripts/GenerarHash.java "$config_local/password.bcrypt"
+```
+
+La utilidad pide una contraseña de al menos 12 caracteres y su confirmación sin
+mostrarlas. BCrypt admite hasta 72 bytes UTF-8. El hash usa coste 12 y se escribe
+con permisos privados; no se imprime. **Continúa solo si terminó correctamente.**
+No uses generadores web ni escribas contraseñas o hashes dentro de comandos.
+
+```fish
+read --prompt-str 'Usuario administrativo local: ' ADMIN_USERNAME
+set -gx ADMIN_USERNAME $ADMIN_USERNAME
+set -gx ADMIN_PASSWORD_HASH (cat "$config_local/password.bcrypt")
+rm -- "$config_local/password.bcrypt"
+rmdir -- "$config_local"
+set -gx SPRING_PROFILES_ACTIVE dev
+./mvnw spring-boot:run
+```
+
+El usuario no debe estar vacío ni tener espacios al principio o al final. Las
+variables duran esta sesión de terminal; para otra sesión repite la configuración
+(puedes usar la misma contraseña). No hay credenciales predeterminadas.
+No compartas el entorno ni actives trazas de shell mientras contiene secretos.
+
+- Menú público: <http://localhost:8080/>.
+- Administración: <http://localhost:8080/admin>, escribiendo la URL directamente.
+  El menú público no muestra un enlace administrativo. Inicia sesión con el
+  usuario y la contraseña que acabas de elegir, **no con el hash**.
+- Para detener: `Ctrl+C` en la terminal del servidor. Después limpia el entorno:
+
+```fish
+set -e ADMIN_USERNAME ADMIN_PASSWORD_HASH SPRING_PROFILES_ACTIVE
+```
+
+SQLite crea `data/menu.db` automáticamente al primer arranque, con tres
+categorías y siete productos de demostración. No requiere instalar un servidor
+SQL. Reiniciar conserva las ediciones y eliminaciones; no regenerará productos
+borrados. El perfil local escucha solamente en `127.0.0.1`; no lo expongas a Internet.
+
+Alternativas completas para [Bash y Windows PowerShell](docs/EJECUCION-LOCAL.md),
+solución de problemas y comprobación desde una copia aislada en ese documento.
+
+### Uso básico
+
+En el menú selecciona Todos o una categoría: Comida / Lonchería, Cafetería y
+Bebidas, o Tienda y Snacks. En `/admin` puedes agregar productos, editar sus
+textos, precio y categoría, ocultarlos y reactivarlos. **Ocultar es reversible;
+Eliminar borra definitivamente tras confirmar.** Actualiza el menú público para
+ver los cambios. Las categorías no se administran desde el panel. Cierra sesión
+al terminar; login, logout y escrituras mantienen protección CSRF.
+
+### Pruebas y catálogo temporal
+
+Desde la raíz, sin necesitar credenciales reales:
+
+```fish
+./mvnw clean test
+./mvnw package
+node --test src/test/js/*.test.mjs
+```
+
+Las pruebas usan bases aisladas. `package` repite las pruebas Java; Node se
+ejecuta por separado. No se requieren `npm install` ni paquetes JavaScript.
+Para probar manualmente desde cero, detén cualquier servidor anterior y, con
+las credenciales locales configuradas, inicia con otra base:
+
+```fish
+set -l prueba_local (mktemp -d)
+env APP_DB_PATH="$prueba_local/menu.db" ./mvnw spring-boot:run
+```
+
+Esa ejecución empieza con los datos de demostración y no altera `data/menu.db`.
+Tras `Ctrl+C`, conserva o elimina únicamente el directorio temporal que creaste.
+Volver a ejecutar sin esa variable recupera la base habitual. No borres tu base
+real para reiniciar una prueba.
+
 ## Tecnologías
 
 - Java 21 (JDK requerido).
@@ -21,31 +122,9 @@ directamente `/admin` en la URL. La autenticación y las operaciones se conserva
 - Coordenadas: `com.elbuensabor:menu`; paquete: `com.elbuensabor.menu`.
 - Monolito por capas a implementar progresivamente.
 
-## Ejecutar en Linux / Fish
-
-Desde la raíz del proyecto, verifica el JDK:
-
-```fish
-java -version
-javac -version
-```
-
-Ambos deben indicar Java 21. Si utilizas `JAVA_HOME`, debe apuntar al JDK 21.
-La primera ejecución requiere Internet para descargar Maven y dependencias.
-El Wrapper utiliza `curl` o `wget` y, según el descargador, `unzip`.
-
-Configura primero `ADMIN_USERNAME` y `ADMIN_PASSWORD_HASH` en el entorno.
-El hash debe ser BCrypt, sin prefijo `{bcrypt}`; no hay valores predeterminados.
-Consulta [docs/SEGURIDAD.md](docs/SEGURIDAD.md). No uses las credenciales de tests.
-
-```fish
-./mvnw spring-boot:run
-```
-
-Abre <http://localhost:8080>. Detén el servidor con `Ctrl+C`.
-Si el checkout perdió el permiso de ejecución, ejecuta `chmod +x mvnw`.
-
 ## Pruebas y empaquetado
+
+Para ejecutar el JAR conserva las variables administrativas del inicio rápido.
 
 ```fish
 ./mvnw clean test
@@ -263,7 +342,7 @@ y riesgos pendientes: [docs/SEGURIDAD.md](docs/SEGURIDAD.md).
 GitHub ya está configurado: el remoto `origin` apunta a
 [xpatto/el-buen-sabor](https://github.com/xpatto/el-buen-sabor).
 Los commits de esta etapa son locales. Todo push o cambio remoto requiere
-autorización explícita. La entrega final requiere un repositorio público.
+autorización explícita. La publicación o cambio de visibilidad queda a decisión del propietario.
 
 Cierre de etapa 4 (2026-10-09): `./mvnw clean test` y `./mvnw package`
 terminaron con BUILD SUCCESS; cada comando ejecutó 113 pruebas, con 0 fallidas,
@@ -322,3 +401,10 @@ finalizaron con BUILD SUCCESS, 204 pruebas cada uno, 0 fallidas, 0 errores y
 La base de desarrollo y los demás archivos de data/ conservaron su SHA-256.
 La lista manual de navegador de esta ampliación sigue pendiente; no se declara
 como ejecutada. Detalles en docs/PRUEBAS-FRONTEND.md.
+
+
+Cierre local (2026-10-11): clean test y package aprobaron 219 pruebas cada uno;
+Node aprobó 38, sin fallidas, errores ni omitidas. Inicio rápido verificado en
+Fish y Bash desde una copia Git local aislada; Windows no ejecutado. Se revisaron
+los ocho commits previos y los archivos nuevos sin secretos reales identificados.
+Evidencia y límites en [EJECUCION-LOCAL.md](docs/EJECUCION-LOCAL.md).

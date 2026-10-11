@@ -131,3 +131,24 @@ cada uno, sin fallidas, errores ni omitidas; 34 pruebas JavaScript aprobadas
 por separado. En la sesión de implementación pasaron 14 escenarios Chromium.
 La lista manual Firefox está preparada y pendiente de ejecución. Datos de
 desarrollo intactos por SHA-256. Detalles y límites en PRUEBAS-FRONTEND.md.
+
+
+## Cierre para ejecución local — 2026-10-11
+
+El alcance vigente se limita a clonar y ejecutar localmente, sin despliegue.
+El Inicio rápido del README genera BCrypt con scripts/GenerarHash.java usando
+entrada de consola sin eco y archivo temporal privado; no incluye secretos
+predeterminados. Usar dev y loopback. No compartir archivos ni entorno del proceso.
+
+Se revisaron los ocho commits alcanzables por las referencias Git locales
+(126 blobs únicos) y los archivos de esta entrega: no se identificaron secretos
+reales, hashes BCrypt persistidos, claves privadas ni bases de datos versionadas.
+Las coincidencias fueron credenciales ficticias exclusivas de tests. Esta revisión
+por patrones y lectura no equivale a una auditoría exhaustiva ni verifica ramas
+remotas ausentes del clon. No se cambió la visibilidad ni se realizó push.
+
+Se añadieron comprobaciones de denegación para 15 rutas de SQLite, auxiliares,
+respaldos, credenciales, logs y configuración: 401 anónimo y 403 incluso con ADMIN.
+El JAR no incluye TestAdminCredentials, el generador ni archivos SQLite/secretos.
+Resultados y límites de dependencias en [EJECUCION-LOCAL.md](EJECUCION-LOCAL.md).
+Los requisitos de Internet anteriores se conservan solo como referencia futura.

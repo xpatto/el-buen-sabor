@@ -27,6 +27,10 @@ replay_pid*
 *.env
 *.log
 logs/
+*.bcrypt
+*.bak
+backups/
+credentials/
 
 # SQLite y archivos auxiliares
 *.db

@@ -144,6 +144,16 @@ class SecurityTests extends SqliteIntegrationTest {
         mvc.perform(get(path).with(user("admin").roles("ADMIN"))).andExpect(status().isForbidden());
     }
 
+    @ParameterizedTest
+    @ValueSource(strings = {"/data/menu.db", "/menu.db", "/menu.db-wal", "/menu.db-shm",
+            "/backups/menu.sqlite3", "/backup.sql", "/.env", "/.git/config",
+            "/application-prod.properties", "/config/application.properties", "/schema.sql",
+            "/data.sql", "/logs/app.log", "/credentials/admin.env", "/actuator/env"})
+    void sensitiveFilesCannotBeDownloadedEvenByAdmin(String path) throws Exception {
+        mvc.perform(get(path)).andExpect(status().isUnauthorized());
+        mvc.perform(get(path).with(user("admin").roles("ADMIN"))).andExpect(status().isForbidden());
+    }
+
     @Test
     void logoutRequiresCsrfAndInvalidatesAuthenticatedSession() throws Exception {
         MockHttpSession session = new MockHttpSession();

@@ -143,6 +143,13 @@ errores ni omitidas. FrontendTests comprueba la ausencia del enlace en la
 respuesta pública y mantiene las comprobaciones de acceso directo a /admin,
 login y panel. Entrega mediante commit local, sin push ni despliegue.
 
+## Cierre final para ejecución local
+
+El cierre final posterior a 747bd31 se limita a entrega y revisión pública del
+código para ejecución local: inicio rápido, generación segura de BCrypt,
+pruebas desde copia aislada y revisión de archivos/historial Git. Sustituye la
+preparación 7A solicitada antes; no incluye hosting, dominio ni infraestructura.
+
 ## Fuera del alcance
 
 - Carrito, pagos, pedidos e inventario.
@@ -151,8 +158,8 @@ login y panel. Entrega mediante commit local, sin push ni despliegue.
 
 ## Versionado y entrega
 
-La entrega final requiere GitHub público, múltiples commits ordenados y README
-de ejecución. GitHub ya está configurado con el remoto `origin` hacia
+La entrega queda preparada para revisión pública del código y ejecución local,
+con commits ordenados y README de inicio rápido. GitHub ya está configurado con el remoto `origin` hacia
 `https://github.com/xpatto/el-buen-sabor.git`. En esta etapa se realiza un commit
 local después de ejecutar y comunicar las pruebas. Cualquier push o cambio de
 visibilidad requiere autorización explícita; no se realizan cambios remotos.
