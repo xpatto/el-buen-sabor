@@ -1,7 +1,8 @@
 # API administrativa — etapa 5
 
 API JSON para un administrador autenticado. Conserva la API pública de lectura,
-los modelos y el esquema SQLite. No incluye panel definitivo ni DELETE.
+los modelos y el esquema SQLite. La etapa 6 incorpora el panel en /admin
+sobre este mismo contrato. No hay DELETE.
 
 ## Sesión y CSRF
 

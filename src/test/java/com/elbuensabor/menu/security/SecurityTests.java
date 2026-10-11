@@ -48,7 +48,7 @@ class SecurityTests extends SqliteIntegrationTest {
     }
 
     @Test
-    void loginChangesSessionIdAndShowsProvisionalAdminState() throws Exception {
+    void loginChangesSessionIdAndShowsAdminPanel() throws Exception {
         MockHttpSession session = new MockHttpSession();
         String originalId = session.getId();
         mvc.perform(post("/admin/login").session(session).with(csrf())
@@ -59,7 +59,7 @@ class SecurityTests extends SqliteIntegrationTest {
         assertThat(session.getId()).isNotEqualTo(originalId);
         mvc.perform(get("/admin").session(session))
                 .andExpect(status().isOk())
-                .andExpect(content().string(containsString("Administración provisional")))
+                .andExpect(content().string(containsString("Tu catálogo")))
                 .andExpect(content().string(containsString("/admin/logout")))
                 .andExpect(content().string(not(containsString("/admin/login"))));
     }

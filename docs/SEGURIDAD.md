@@ -1,4 +1,4 @@
-# Seguridad — etapa 4
+# Seguridad — configuración vigente hasta etapa 6
 
 ## Configuración
 
@@ -35,7 +35,7 @@ ni validan un certificado o un proxy desplegado.
 ## Autenticación y sesión
 
 Un administrador en memoria con rol ADMIN. GET /admin presenta el formulario
-Thymeleaf o una vista provisional autenticada. POST /admin/login y
+Thymeleaf o el panel de productos autenticado. POST /admin/login y
 POST /admin/logout exigen CSRF. La autenticación cambia el ID de sesión;
 logout invalida la sesión. No hay HTTP Basic ni registro público. La etapa 5
 incorpora la API de gestión de productos descrita en API-ADMINISTRATIVA.md.
@@ -77,7 +77,7 @@ no se empaqueta en el JAR. No se versionan secretos ni bases SQLite.
 - Las sesiones son locales en memoria: un reinicio requiere nuevo login;
   no se ha diseñado un despliegue con múltiples instancias.
 
-Estos puntos operativos siguen pendientes; no autorizan despliegue ni etapa 6.
+Estos puntos operativos siguen pendientes; no autorizan despliegue ni etapa 7.
 
 ## Resultados finales de etapa 4 (2026-10-09)
 
@@ -98,3 +98,36 @@ Las pruebas reforzadas detectaron aceptación de X-Forwarded-Host desde el
 proxy confiable; se deshabilitaron host/puerto reenviados y la regresión pasó.
 También se corrigió la comparación para admitir 443 implícito o explícito.
 No se verificó TLS de una infraestructura desplegada. Sin CRUD ni etapa 5.
+
+## Frontend y CSP (etapa 6)
+
+Se permite script-src 'self' para módulos JavaScript locales; se mantienen
+default-src 'self', style-src 'self', object-src 'none', base-uri 'none',
+form-action 'self' y frame-ancestors 'none'. No se añade unsafe-inline,
+unsafe-eval, fuentes externas ni CORS. Permisos GET explícitos para
+/css/styles.css, /css/admin.css, /js/app.js, /js/admin.js y /js/catalog.js;
+el resto de rutas desconocidas continúa denegado.
+
+El panel autenticado expone el token CSRF vigente en una metaetiqueta mediante
+th:content; admin.js lo envía en X-CSRF-TOKEN para cada escritura. Login y
+logout conservan sus formularios con CSRF. Fetch utiliza credentials:
+same-origin y no reintenta escrituras automáticamente. Ante 401/403 se
+deshabilitan las acciones y se ofrece volver a iniciar sesión.
+
+La API no se inserta como HTML: se usan createElement y textContent, sin
+innerHTML. Los textos se serializan con JSON.stringify; solo números validados
+se incorporan como literales JSON para conservar precisión decimal. No hay
+tokens, cookies ni contraseñas en localStorage. Descargar admin.js es público
+y no expone datos del catálogo administrativo ni credenciales.
+
+La CSP reduce el riesgo de inyección, pero no sustituye validaciones,
+actualizaciones ni la configuración segura del despliegue. Una sesión vencida
+se detecta en la próxima solicitud; el listado ya mostrado puede permanecer
+visible hasta recargar o navegar. Usar Cerrar sesión al terminar, especialmente
+en equipos compartidos. Persisten los pendientes operativos indicados arriba.
+
+Cierre de etapa 6 (2026-10-11): clean test y package aprobaron 191 pruebas
+cada uno, sin fallidas, errores ni omitidas; 34 pruebas JavaScript aprobadas
+por separado. En la sesión de implementación pasaron 14 escenarios Chromium.
+La lista manual Firefox está preparada y pendiente de ejecución. Datos de
+desarrollo intactos por SHA-256. Detalles y límites en PRUEBAS-FRONTEND.md.

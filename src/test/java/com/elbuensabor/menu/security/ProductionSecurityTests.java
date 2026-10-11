@@ -76,7 +76,7 @@ class ProductionSecurityTests extends SqliteIntegrationTest {
             var admin = client.send(request("/admin").header("Cookie", authenticatedCookie).GET().build(),
                     HttpResponse.BodyHandlers.ofString());
             assertThat(admin.statusCode()).isEqualTo(200);
-            assertThat(admin.body()).contains("Administración provisional").doesNotContain("name=\"password\"");
+            assertThat(admin.body()).contains("Tu catálogo").doesNotContain("name=\"password\"");
             var anonymous = client.send(request("/api/admin/productos").GET().build(), HttpResponse.BodyHandlers.ofString());
             assertThat(anonymous.statusCode()).isEqualTo(401);
             var authorized = client.send(request("/api/admin/productos").header("Cookie", authenticatedCookie).GET().build(),

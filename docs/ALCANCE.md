@@ -26,7 +26,7 @@ documentación y primer commit local en `main`.
 
 La arquitectura futura será un monolito por capas, separando controladores,
 servicios y repositorios conforme se implementen. No se crean capas vacías.
-La página temporal de la etapa 1 se conserva.
+La página temporal se conservó hasta su sustitución por el menú en la etapa 6.
 
 ## Etapa 2 completada: modelo de datos y persistencia SQLite
 
@@ -95,6 +95,27 @@ La etapa 3 no incorporó operaciones de escritura ni interfaces definitivas.
 - Documentación del contrato en API-ADMINISTRATIVA.md. Solo commit local tras
   pruebas. Sin push, panel definitivo, DELETE, despliegue ni etapa 6.
 
+## Etapa 6 completada: frontend funcional
+
+- Exactamente dos páginas: index.html público y /admin con login o panel
+  autenticado según la sesión. No se incorporan nuevos endpoints de API.
+- Menú responsivo con categorías desde SQLite, Todos inicial, filtro por slug,
+  tarjetas con precios MXN y estados de carga, vacío, error y reintento.
+- Panel con listado completo, altas, edición a partir del listado y acción
+  independiente para ocultar/reactivar. Sin edición de categorías ni DELETE.
+- HTML5, CSS Grid/Flexbox y JavaScript sin frameworks ni dependencias nuevas.
+  styles.css y admin.css; app.js y admin.js; catalog.js comparte precisión y fetch.
+- Validaciones de formulario equivalentes a los límites del servidor. Los
+  precios e IDs long se conservan como texto exacto antes de JSON.parse; se
+  envían como números JSON validados, sin redondeo mediante Number.
+- CSRF desde metaetiqueta Thymeleaf, cookies del mismo origen, logout protegido,
+  aviso de sesión vencida y ausencia de credenciales/tokens en almacenamiento local.
+- CSP script-src 'self' y permiso GET para cinco recursos propios enumerados;
+  se mantienen las demás protecciones y la autorización de /api/admin/**.
+- Pruebas Spring/JavaScript, comprobaciones en navegador sobre SQLite temporal
+  y lista manual para Firefox en CachyOS. Solo commit local; sin push,
+  despliegue ni avance a etapa 7.
+
 ## Fuera del alcance
 
 - Carrito, pagos, pedidos e inventario.
@@ -118,3 +139,9 @@ credenciales ausentes o inválidas. Detalles y límites en docs/SEGURIDAD.md.
 Cierre de etapa 5 (2026-10-09): clean test y package ejecutaron 179 pruebas
 cada uno; 179 aprobadas, 0 fallidas, 0 errores y 0 omitidas. Datos de desarrollo
 intactos por comparación SHA-256. Contrato y evidencia en API-ADMINISTRATIVA.md.
+
+Cierre de etapa 6 (2026-10-11): clean test y package aprobaron 191 pruebas
+cada uno, sin fallidas, errores ni omitidas; 34 pruebas JavaScript aprobadas
+por separado. En la sesión de implementación pasaron 14 escenarios Chromium.
+La lista manual Firefox está preparada y pendiente de ejecución. Datos de
+desarrollo intactos por SHA-256. Detalles y límites en PRUEBAS-FRONTEND.md.

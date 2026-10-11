@@ -26,6 +26,8 @@ public class SecurityConfig {
                         // Solo despachos internos de error; GET /error continúa denegado.
                         .dispatcherTypeMatchers(DispatcherType.ERROR).permitAll()
                         .requestMatchers(HttpMethod.GET, "/", "/index.html", "/api/categorias", "/api/productos", "/admin").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/css/styles.css", "/css/admin.css",
+                                "/js/app.js", "/js/admin.js", "/js/catalog.js").permitAll()
                         .requestMatchers(HttpMethod.POST, "/admin/login", "/admin/logout").permitAll()
                         .requestMatchers("/api/admin/**").hasRole("ADMIN")
                         .anyRequest().denyAll())
@@ -42,7 +44,7 @@ public class SecurityConfig {
                 .headers(headers -> headers
                         .frameOptions(frame -> frame.deny())
                         .contentSecurityPolicy(csp -> csp.policyDirectives(
-                                "default-src 'self'; script-src 'none'; style-src 'self'; object-src 'none'; "
+                                "default-src 'self'; script-src 'self'; style-src 'self'; object-src 'none'; "
                                         + "base-uri 'none'; form-action 'self'; frame-ancestors 'none'"))
                         .httpStrictTransportSecurity(hsts -> hsts.maxAgeInSeconds(31536000).includeSubDomains(false)));
         if (environment.acceptsProfiles(Profiles.of("prod"))) {

@@ -1,8 +1,8 @@
 # El Buen Sabor
 
-Menú digital del restaurante El Buen Sabor. Etapa 5: API administrativa protegida
-para gestionar productos. Se conserva la API REST pública de lectura sobre SQLite.
-La página temporal sigue mostrando «El Buen Sabor» y «Proyecto inicializado».
+Menú digital del restaurante El Buen Sabor. Etapa 6: menú público y panel administrativo
+funcionales, responsivos y conectados a las APIs existentes. Se conserva la API REST pública de lectura sobre SQLite.
+Dos páginas: menú en / y administración con inicio de sesión en /admin.
 
 ## Tecnologías
 
@@ -11,6 +11,8 @@ La página temporal sigue mostrando «El Buen Sabor» y «Proyecto inicializado�
 - Maven 3.9.11 mediante Maven Wrapper 3.3.4; no requiere Maven instalado.
 - Spring Web, Spring Security, Thymeleaf, Validation y Spring Boot Starter Test.
 - Spring Security Test, exclusivamente para pruebas.
+- Frontend con HTML5, CSS Grid/Flexbox y módulos JavaScript nativos, sin frameworks,
+  fuentes externas ni dependencias adicionales.
 - Spring JDBC mediante `spring-boot-starter-jdbc` 3.5.16 (Spring JDBC 6.2.19,
   HikariCP 6.3.3) y SQLite JDBC de Xerial 3.49.1.0, en alcance runtime.
 - Versiones administradas por el parent de Spring Boot; no se utiliza ORM.
@@ -166,7 +168,8 @@ Nombre de 1–120 caracteres y descripción de 1–2000, sin aceptar valores
 formados solo por espacios. Precio positivo con hasta dos decimales,
 convertido exactamente a centavos long; máximo 92233720368547758.07.
 Categoría existente e identificadores positivos; activo exige un booleano JSON.
-No hay DELETE, gestión de usuarios, panel definitivo ni funcionalidades de etapa 6.
+No hay DELETE ni gestión de usuarios. El panel de etapa 6 consume estos mismos
+endpoints; no se añaden rutas de API.
 
 ## Base de datos
 
@@ -228,13 +231,13 @@ futuros cambios de estructura requerirán una migración explícita.
 ## Alcance y colaboración
 
 Consulta [docs/ALCANCE.md](docs/ALCANCE.md) y [AGENTS.md](AGENTS.md) antes de
-cambiar el proyecto. La autenticación y la API administrativa están implementadas;
-el panel visual definitivo sigue pendiente. No hay credenciales de producción
+cambiar el proyecto. La autenticación, las APIs y ambas interfaces están
+implementadas dentro de las seis etapas autorizadas. No hay credenciales de producción
 ni bases de datos en el repositorio.
 
 ## Seguridad y autenticación
 
-`GET /admin` muestra el formulario de acceso o la administración provisional.
+`GET /admin` muestra el formulario de acceso o el panel de productos autenticado.
 Login (`POST /admin/login`) y logout (`POST /admin/logout`) requieren CSRF.
 `/api/admin/**` requiere ADMIN: 401 JSON para anónimos, 403 sin rol y 404
 para rutas todavía no implementadas cuando se supera la autorización.
@@ -263,3 +266,37 @@ con BUILD SUCCESS. Cada comando ejecutó 179 pruebas: 179 aprobadas,
 0 fallidas, 0 errores y 0 omitidas. Datos de desarrollo sin modificaciones,
 verificados mediante SHA-256. Resultados, contrato y límites en
 [API-ADMINISTRATIVA.md](docs/API-ADMINISTRATIVA.md).
+
+## Interfaces web (etapa 6)
+
+Abre http://localhost:8080/ para consultar el menú sin autenticarte. Todos es
+la categoría inicial; el selector consulta la API por slug sin recargar la página.
+Las tarjetas muestran nombre, categoría, descripción y precio exacto en MXN.
+Se presentan estados de carga, catálogo vacío, error y reintento.
+
+Abre http://localhost:8080/admin e inicia sesión para listar todos los productos,
+agregar, editar u ocultar/reactivar. El formulario reutiliza los datos del listado;
+PUT conserva la disponibilidad y PATCH la modifica por separado. Cerrar sesión
+continúa usando el formulario Thymeleaf protegido por CSRF. Una sesión vencida
+muestra un enlace de autenticación y bloquea las escrituras.
+
+Los precios se mantienen como texto decimal exacto desde la lectura de JSON
+hasta su envío; no se convierten a Number. Se admiten los límites del backend,
+incluido 92233720368547758.07, sin redondeos. La interfaz exige punto decimal,
+no coma ni notación exponencial. El servidor conserva sus validaciones.
+
+Los archivos app.js y admin.js separan ambas interfaces; catalog.js comparte
+la lectura exacta de JSON, validación de importes y solicitudes fetch. CSS y
+JavaScript se sirven localmente. El token AJAX proviene de una metaetiqueta
+Thymeleaf autenticada y nunca se guarda en localStorage.
+
+Consulta [PRUEBAS-FRONTEND.md](docs/PRUEBAS-FRONTEND.md) para configurar
+credenciales locales, ejecutar pruebas y realizar la lista manual de Firefox
+en CachyOS. Las pruebas JavaScript usan el runner integrado de Node, sin npm
+ni instalación de paquetes; Node no es necesario para ejecutar el JAR.
+
+Cierre de etapa 6 (2026-10-11): clean test y package aprobaron 191 pruebas
+cada uno, sin fallidas, errores ni omitidas; 34 pruebas JavaScript aprobadas
+por separado. En la sesión de implementación pasaron 14 escenarios Chromium.
+La lista manual Firefox está preparada y pendiente de ejecución. Datos de
+desarrollo intactos por SHA-256. Detalles y límites en [PRUEBAS-FRONTEND.md](docs/PRUEBAS-FRONTEND.md).
