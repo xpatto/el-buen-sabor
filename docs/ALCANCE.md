@@ -131,6 +131,18 @@ La etapa 3 no incorporó operaciones de escritura ni interfaces definitivas.
 - Sin eliminación de categorías, VACUUM automático, nuevas dependencias,
   push, despliegue ni avance a etapa 7.
 
+## Ajuste de interfaz posterior a la etapa 6.1
+
+El ajuste de interfaz posterior a la etapa 6.1 elimina del HTML público el
+enlace «Administración». Se conserva el acceso directo a /admin, su login,
+panel y operaciones, sin cambios de Spring Security, rutas ni CSS.
+
+Verificado el 2026-10-11: ./mvnw clean test y ./mvnw package finalizaron con
+BUILD SUCCESS, 204 pruebas cada uno; Node aprobó sus 38 pruebas. Sin fallidas,
+errores ni omitidas. FrontendTests comprueba la ausencia del enlace en la
+respuesta pública y mantiene las comprobaciones de acceso directo a /admin,
+login y panel. Entrega mediante commit local, sin push ni despliegue.
+
 ## Fuera del alcance
 
 - Carrito, pagos, pedidos e inventario.

@@ -3,6 +3,8 @@
 Menú digital del restaurante El Buen Sabor. Etapa 6.1: menú y panel administrativo
 con eliminación definitiva y carga inicial persistente. Se conserva la API pública.
 Dos páginas: menú en / y administración con inicio de sesión en /admin.
+El menú público no muestra un enlace administrativo; se accede escribiendo
+directamente `/admin` en la URL. La autenticación y las operaciones se conservan.
 
 ## Tecnologías
 

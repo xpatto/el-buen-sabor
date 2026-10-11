@@ -40,7 +40,7 @@ class FrontendTests extends SqliteIntegrationTest {
 
     @ParameterizedTest
     @ValueSource(strings = {"/","/index.html"})
-    void menuIsPublicAndUsesExternalAssets(String path) throws Exception {
+    void menuIsPublicWithoutAdminAccessLinkAndUsesExternalAssets(String path) throws Exception {
         if (path.equals("/")) {
             // MockMvc registra el forward, pero no ejecuta el segundo despacho del contenedor.
             mvc.perform(get(path)).andExpect(status().isOk()).andExpect(forwardedUrl("index.html"));
@@ -48,6 +48,7 @@ class FrontendTests extends SqliteIntegrationTest {
         }
         mvc.perform(get(path)).andExpect(status().isOk())
                 .andExpect(content().string(containsString("El Buen Sabor")))
+                .andExpect(content().string(not(containsString("/admin"))))
                 .andExpect(content().string(containsString("id=\"category-filter\"")))
                 .andExpect(content().string(containsString("id=\"products\"")))
                 .andExpect(content().string(containsString("src=\"/js/app.js\"")))
