@@ -1,7 +1,7 @@
 # El Buen Sabor
 
-Menú digital del restaurante El Buen Sabor. Etapa 6: menú público y panel administrativo
-funcionales, responsivos y conectados a las APIs existentes. Se conserva la API REST pública de lectura sobre SQLite.
+Menú digital del restaurante El Buen Sabor. Etapa 6.1: menú y panel administrativo
+con eliminación definitiva y carga inicial persistente. Se conserva la API pública.
 Dos páginas: menú en / y administración con inicio de sesión en /admin.
 
 ## Tecnologías
@@ -151,9 +151,9 @@ cuando la solicitud supera los filtros de seguridad. Las escrituras públicas
 están denegadas: 403 sin CSRF; con CSRF, 401 anónimo o 403 autenticado.
 No hay endpoints públicos de escritura.
 
-## API administrativa (etapa 5)
+## API administrativa (etapas 5 y 6.1)
 
-Requiere sesión con ROLE_ADMIN y CSRF válido para POST, PUT y PATCH.
+Requiere sesión con ROLE_ADMIN y CSRF válido para POST, PUT, PATCH y DELETE.
 El contrato completo, ejemplos JSON y el flujo de autenticación están en
 [docs/API-ADMINISTRATIVA.md](docs/API-ADMINISTRATIVA.md).
 
@@ -163,13 +163,15 @@ El contrato completo, ejemplos JSON y el flujo de autenticación están en
 | POST /api/admin/productos | Crea un producto activo; 201 y Location |
 | PUT /api/admin/productos/{id} | Actualiza información, categoría y precio; conserva activo |
 | PATCH /api/admin/productos/{id}/estado | Oculta o reactiva; solo cambia activo |
+| DELETE /api/admin/productos/{id} | Elimina físicamente; 204 sin cuerpo |
 
 Nombre de 1–120 caracteres y descripción de 1–2000, sin aceptar valores
 formados solo por espacios. Precio positivo con hasta dos decimales,
 convertido exactamente a centavos long; máximo 92233720368547758.07.
 Categoría existente e identificadores positivos; activo exige un booleano JSON.
-No hay DELETE ni gestión de usuarios. El panel de etapa 6 consume estos mismos
-endpoints; no se añaden rutas de API.
+La ampliación 6.1 autoriza DELETE solo para productos administrativos.
+Eliminar es irreversible; Ocultar/Reactivar sigue siendo reversible.
+No hay eliminación de categorías ni gestión de usuarios.
 
 ## Base de datos
 
@@ -202,9 +204,11 @@ centavos usan `long`, el estado usa `boolean`. `CategoriaRepository.listarTodas(
 `ProductoRepository.listarActivos()` y `listarActivosPorCategoria(String slug)`
 usan `JdbcTemplate` y `RowMapper`, ordenan por ID y parametrizan el slug.
 ProductoRepository también lista todos, busca por ID, inserta con SQLite
-INTEGER PRIMARY KEY y RETURNING, edita información y cambia el estado.
+INTEGER PRIMARY KEY y RETURNING, edita información, cambia el estado y elimina.
+Los IDs se asignan mediante un contador persistente en la transacción del alta
+para no reutilizar los de productos eliminados desde esta migración.
 ProductoService agrupa las escrituras y lecturas de respuesta en transacciones.
-El esquema y los scripts de semillas permanecen sin cambios.
+La etapa 6.1 añade inicializacion_catalogo y adapta las semillas a una carga única.
 
 Datos iniciales (precios ilustrativos, no información comercial real):
 
@@ -219,20 +223,24 @@ Cada producto incluye una descripción breve. Los precios se guardan en centavos
 
 ### Conservación al reiniciar
 
-Las tablas se crean solo si no existen. Las categorías usan IDs estables 1–3 y
-los productos 1–7: las inserciones omiten conflictos, sin `UPDATE`, `REPLACE`
-ni `DELETE`. Se preservan nombres, descripciones, precios, categorías asignadas,
-estados y registros añadidos posteriormente. Un producto oculto permanece oculto.
-Estos IDs se reservan para las semillas; no deben reutilizarse para otros datos.
-El borrado físico no está contemplado: si se elimina una semilla manualmente,
-puede volver a insertarse al arrancar. Los scripts no migran tablas existentes;
-futuros cambios de estructura requerirán una migración explícita.
+Una base nueva recibe tres categorías y siete productos de demostración.
+inicializacion_catalogo registra la carga completada y el último ID asignado.
+Antes de crear categorias/productos, schema.sql detecta tablas anteriores:
+si alguna existe, adopta el catálogo sin rellenar huecos ni sobrescribir datos,
+incluso si está vacío. Para bases nuevas registra un estado pendiente;
+data.sql inserta semillas y confirma la marca dentro de una transacción SAVEPOINT.
+Una interrupción antes de completarla permite reintentar la carga.
+
+Eliminar una semilla o todos los productos ya no los regenera al reiniciar.
+Las bases anteriores se adoptan sin DROP TABLE ni reconstrucción. Los casos
+históricos ambiguos y límites se documentan en
+[API-ADMINISTRATIVA.md](docs/API-ADMINISTRATIVA.md).
 
 ## Alcance y colaboración
 
 Consulta [docs/ALCANCE.md](docs/ALCANCE.md) y [AGENTS.md](AGENTS.md) antes de
 cambiar el proyecto. La autenticación, las APIs y ambas interfaces están
-implementadas dentro de las seis etapas autorizadas. No hay credenciales de producción
+implementadas dentro de las seis etapas y la ampliación 6.1. No hay credenciales de producción
 ni bases de datos en el repositorio.
 
 ## Seguridad y autenticación
@@ -275,10 +283,14 @@ Las tarjetas muestran nombre, categoría, descripción y precio exacto en MXN.
 Se presentan estados de carga, catálogo vacío, error y reintento.
 
 Abre http://localhost:8080/admin e inicia sesión para listar todos los productos,
-agregar, editar u ocultar/reactivar. El formulario reutiliza los datos del listado;
+agregar, editar, ocultar/reactivar o eliminar. El formulario reutiliza los datos del listado;
 PUT conserva la disponibilidad y PATCH la modifica por separado. Cerrar sesión
 continúa usando el formulario Thymeleaf protegido por CSRF. Una sesión vencida
 muestra un enlace de autenticación y bloquea las escrituras.
+
+Eliminar pide confirmación con el nombre y envía DELETE con CSRF. Cancelar no
+envía ninguna petición; tras error de red se debe comprobar el listado antes
+de repetir. Recuperar un producto eliminado exige restaurarlo desde un respaldo.
 
 Los precios se mantienen como texto decimal exacto desde la lectura de JSON
 hasta su envío; no se convierten a Number. Se admiten los límites del backend,
@@ -300,3 +312,11 @@ cada uno, sin fallidas, errores ni omitidas; 34 pruebas JavaScript aprobadas
 por separado. En la sesión de implementación pasaron 14 escenarios Chromium.
 La lista manual Firefox está preparada y pendiente de ejecución. Datos de
 desarrollo intactos por SHA-256. Detalles y límites en [PRUEBAS-FRONTEND.md](docs/PRUEBAS-FRONTEND.md).
+
+
+Cierre de etapa 6.1 (2026-10-11): ./mvnw clean test y ./mvnw package
+finalizaron con BUILD SUCCESS, 204 pruebas cada uno, 0 fallidas, 0 errores y
+0 omitidas. Node ejecutó 38 pruebas: 38 aprobadas, 0 fallidas y 0 omitidas.
+La base de desarrollo y los demás archivos de data/ conservaron su SHA-256.
+La lista manual de navegador de esta ampliación sigue pendiente; no se declara
+como ejecutada. Detalles en docs/PRUEBAS-FRONTEND.md.

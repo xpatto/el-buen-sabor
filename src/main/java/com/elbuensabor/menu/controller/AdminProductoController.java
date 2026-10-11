@@ -10,6 +10,7 @@ import com.elbuensabor.menu.service.ProductoService;
 import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -47,5 +48,11 @@ public class AdminProductoController {
     @PatchMapping("/{id}/estado")
     public AdminProductoResponse cambiarEstado(@PathVariable long id, @Valid @RequestBody EstadoProductoRequest request) {
         return service.cambiarEstado(id, request.activo());
+    }
+
+    @DeleteMapping("/{id}")
+    public ResponseEntity<Void> eliminar(@PathVariable long id) {
+        service.eliminar(id);
+        return ResponseEntity.noContent().build();
     }
 }

@@ -11,6 +11,8 @@
 
 ## Ampliaciones aprobadas
 
+- Etapa 6.1: eliminación física e irreversible de productos, conservando
+  ocultación/reactivación, con inicialización persistente sin reapariciones.
 - Segunda página administrativa protegida para agregar y modificar productos,
   actualizar precios, ocultar y reactivar productos.
 - Persistencia SQLite mediante Spring JDBC y SQLite JDBC.
@@ -116,6 +118,19 @@ La etapa 3 no incorporó operaciones de escritura ni interfaces definitivas.
   y lista manual para Firefox en CachyOS. Solo commit local; sin push,
   despliegue ni avance a etapa 7.
 
+## Etapa 6.1: eliminación definitiva de productos
+
+- DELETE /api/admin/productos/{id}, ROLE_ADMIN y CSRF; 204 sin cuerpo,
+  404 inexistente y 400 ID inválido. SQL parametrizado y transacción del servicio.
+- Botón Eliminar diferenciado y confirmación con nombre; cancelar no envía
+  peticiones. Controles bloqueados durante el envío y notificaciones accesibles.
+- requestJson acepta 204 sin leer JSON; no reintenta eliminaciones fallidas.
+- inicializacion_catalogo identifica bases antiguas antes de crear tablas,
+  conserva vacíos/ediciones y carga semillas una sola vez en bases nuevas.
+- Contador persistente para no reutilizar IDs borrados desde la migración.
+- Sin eliminación de categorías, VACUUM automático, nuevas dependencias,
+  push, despliegue ni avance a etapa 7.
+
 ## Fuera del alcance
 
 - Carrito, pagos, pedidos e inventario.
@@ -145,3 +160,11 @@ cada uno, sin fallidas, errores ni omitidas; 34 pruebas JavaScript aprobadas
 por separado. En la sesión de implementación pasaron 14 escenarios Chromium.
 La lista manual Firefox está preparada y pendiente de ejecución. Datos de
 desarrollo intactos por SHA-256. Detalles y límites en PRUEBAS-FRONTEND.md.
+
+
+Cierre de etapa 6.1 (2026-10-11): ./mvnw clean test y ./mvnw package
+finalizaron con BUILD SUCCESS, 204 pruebas cada uno, 0 fallidas, 0 errores y
+0 omitidas. Node ejecutó 38 pruebas: 38 aprobadas, 0 fallidas y 0 omitidas.
+La base de desarrollo y los demás archivos de data/ conservaron su SHA-256.
+La lista manual de navegador de esta ampliación sigue pendiente; no se declara
+como ejecutada. Detalles en docs/PRUEBAS-FRONTEND.md.

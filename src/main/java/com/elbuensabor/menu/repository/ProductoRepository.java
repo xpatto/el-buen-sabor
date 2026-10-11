@@ -51,12 +51,19 @@ public class ProductoRepository {
     }
 
     public Producto crear(String nombre, String descripcion, long precioCentavos, long categoriaId) {
-        // SQLite asigna INTEGER PRIMARY KEY; RETURNING obtiene la fila del mismo INSERT.
+        // La transacción del servicio asigna y consume el ID; nunca reutilizar uno borrado.
+        Long id = jdbc.queryForObject("""
+                UPDATE inicializacion_catalogo
+                SET ultimo_producto_id = MAX(ultimo_producto_id, COALESCE((SELECT MAX(id) FROM productos), 0)) + 1
+                WHERE id = 1
+                  AND MAX(ultimo_producto_id, COALESCE((SELECT MAX(id) FROM productos), 0)) < 9223372036854775807
+                RETURNING ultimo_producto_id
+                """, Long.class);
         return jdbc.queryForObject("""
-                INSERT INTO productos (nombre, descripcion, precio_centavos, categoria_id, activo)
-                VALUES (?, ?, ?, ?, 1)
+                INSERT INTO productos (id, nombre, descripcion, precio_centavos, categoria_id, activo)
+                VALUES (?, ?, ?, ?, ?, 1)
                 RETURNING id, nombre, descripcion, precio_centavos, categoria_id, activo
-                """, ROW_MAPPER, nombre, descripcion, precioCentavos, categoriaId);
+                """, ROW_MAPPER, id, nombre, descripcion, precioCentavos, categoriaId);
     }
 
     public int actualizar(long id, String nombre, String descripcion, long precioCentavos, long categoriaId) {
@@ -67,5 +74,9 @@ public class ProductoRepository {
 
     public int cambiarEstado(long id, boolean activo) {
         return jdbc.update("UPDATE productos SET activo = ? WHERE id = ?", activo ? 1 : 0, id);
+    }
+
+    public int eliminar(long id) {
+        return jdbc.update("DELETE FROM productos WHERE id = ?", id);
     }
 }

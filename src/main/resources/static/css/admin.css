@@ -20,6 +20,8 @@ fieldset { border: 0; padding: 0; margin: 0; min-width: 0; }
 .badge.active { background: #e2eee4; color: #214b30; }
 .badge.inactive { background: #ede7df; color: #57483e; }
 #session-login { margin-bottom: 1rem; }
+.button.danger { background: var(--white); color: var(--error); border-color: var(--error); }
+.button.danger:hover:not(:disabled) { background: #fce8e4; }
 @media (max-width: 640px) {
     .admin-container { padding-top: 1.5rem; }
     .login-card { padding: 1.4rem; margin-top: .5rem; }

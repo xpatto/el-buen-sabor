@@ -1,8 +1,8 @@
-# API administrativa — etapa 5
+# API administrativa — etapas 5 y 6.1
 
 API JSON para un administrador autenticado. Conserva la API pública de lectura,
-los modelos y el esquema SQLite. La etapa 6 incorpora el panel en /admin
-sobre este mismo contrato. No hay DELETE.
+los modelos y las tablas existentes de SQLite. La etapa 6 incorpora el panel en /admin
+sobre este mismo contrato. La ampliación 6.1 añade DELETE de productos.
 
 ## Sesión y CSRF
 
@@ -12,7 +12,8 @@ sobre este mismo contrato. No hay DELETE.
 3. Después del 302 a /admin, conservar la nueva cookie (el ID de sesión rota)
    y obtener de nuevo GET /admin. Extraer el nuevo `_csrf` del formulario de logout.
 4. Enviar la cookie autenticada en todas las operaciones administrativas.
-   Para POST/PUT/PATCH JSON usar Content-Type: application/json y el encabezado
+   Para POST/PUT/PATCH JSON usar Content-Type: application/json. DELETE no
+   necesita cuerpo. Todas estas escrituras requieren el encabezado
    X-CSRF-TOKEN con el token obtenido después del login.
 5. Cerrar sesión con POST /admin/logout, cookie y token CSRF vigente.
 
@@ -51,8 +52,9 @@ especialmente cerca del máximo admitido.
 
 201 Created, cuerpo con el producto completo y Location: /api/admin/productos/8
 para el ID asignado. Location identifica el recurso editable mediante PUT;
-no se incorpora un GET individual adicional. SQLite asigna el ID; se obtiene
-con RETURNING en el mismo INSERT. El nuevo producto siempre está activo.
+no se incorpora un GET individual adicional. La transacción reserva el ID en
+inicializacion_catalogo e inserta el producto con RETURNING; no reutiliza IDs
+eliminados desde la migración. El nuevo producto siempre está activo.
 
 ### PUT /api/admin/productos/{id}
 
@@ -79,6 +81,18 @@ Solo los campos definidos en cada DTO se aplican. Los campos adicionales se
 ignoran: activo en POST/PUT no permite alterar disponibilidad, y precio en
 PATCH no permite editar el precio.
 
+### DELETE /api/admin/productos/{id}
+
+Requiere sesión ADMIN y X-CSRF-TOKEN válido. No necesita cuerpo.
+204 No Content al eliminar físicamente, sin JSON. 404 si no existe (incluido
+repetir una eliminación confirmada) y 400 si el ID no es un long positivo.
+Categorías y demás productos permanecen intactos. El producto desaparece del
+menú público en su siguiente consulta.
+
+En el panel se confirma el nombre y la irreversibilidad. Cancelar no envía
+petición; durante el envío se bloquean controles y después se refresca el listado.
+Ocultar continúa siendo reversible y no borra el registro.
+
 ## Validación y errores
 
 - nombre: obligatorio, no vacío ni solo espacios, máximo 120 caracteres.
@@ -99,11 +113,12 @@ PATCH no permite editar el precio.
 | --- | --- |
 | 200 | Listado, actualización o cambio de estado correcto |
 | 201 | Producto creado |
+| 204 | Producto eliminado, sin cuerpo |
 | 400 | Datos, JSON, categoría o identificador inválidos |
 | 401 | Sin autenticación, cuando la solicitud supera la comprobación CSRF |
 | 403 | Rol insuficiente o CSRF ausente/inválido |
-| 404 | Producto inexistente en PUT/PATCH con datos válidos |
-| 405 | Método no implementado (por ejemplo DELETE), tras superar seguridad |
+| 404 | Producto inexistente en PUT/PATCH/DELETE con datos válidos |
+| 405 | Método no implementado, tras superar seguridad |
 | 500 | Error inesperado; respuesta genérica |
 
 Los errores mantienen el formato ApiError:
@@ -122,13 +137,14 @@ de excepciones en la respuesta.
 
 Las escrituras y la lectura del resultado pertenecen a una transacción
 del servicio. Las consultas usan parámetros, sin concatenar datos del cliente.
-No se modifica el esquema ni los scripts de inicialización; los cambios de
-semillas y nuevos productos sobreviven al reinicio.
+La etapa 6.1 añade inicializacion_catalogo, sin reconstruir categorias/productos.
+Ediciones, altas y eliminaciones sobreviven al reinicio.
 
 SQLite admite un escritor a la vez. Esta etapa no incorpora reintentos por
 bloqueo ni control de versiones para ediciones simultáneas: un bloqueo puede
 devolver un 500 controlado y la última edición confirmada prevalece.
-No hay eliminación física, inventario ni gestión de categorías o usuarios.
+La eliminación física se limita a productos administrativos. No hay inventario
+ni gestión/eliminación de categorías o usuarios.
 
 Las pruebas cubren ciclo administrativo, límites de textos/precios, categoría
 decimal rechazada, acceso con sesión/CSRF real, permisos, rollback conjunto y
@@ -161,3 +177,53 @@ secretos reales identificados. No sustituye una auditoría de seguridad.
 El commit de etapa 5 es exclusivamente local; no se realiza push, despliegue,
 panel definitivo ni avance a etapa 6. Persisten los riesgos operativos de
 SEGURIDAD.md y la limitación de concurrencia SQLite descrita en esta API.
+
+## Inicialización y migración (6.1)
+
+schema.sql registra el estado antes de crear categorias/productos. Si cualquiera
+de esas tablas ya existe y no hay marca, adopta la base como inicializada, incluso
+si faltan semillas, están editadas o no queda ningún producto. No se restaura ni
+se modifica ninguna fila existente. Si ninguna existe, registra carga pendiente.
+
+inicializacion_catalogo contiene una fila (id=1), completada y ultimo_producto_id.
+data.sql solo carga semillas cuando completada=0. Inserciones y marcado final
+se agrupan en SAVEPOINT; el cierre de una conexión tras fallo revierte la carga.
+El estado pendiente persiste si el arranque se interrumpe antes de data.sql.
+Un siguiente arranque puede completar esa carga; una marca completada nunca
+se usa para rellenar productos eliminados. No se ejecuta DROP TABLE ni VACUUM.
+
+ultimo_producto_id adopta el máximo ID existente al migrar y el de las semillas
+al cargarlas. Cada alta incrementa y consume ese contador dentro de la misma
+transacción. No se reutilizan IDs borrados desde la migración, incluso después
+de vaciar el catálogo y reiniciar. Al alcanzar Long.MAX_VALUE no se generan IDs
+negativos ni fraccionarios: el alta falla con error controlado.
+
+Casos históricos ambiguos:
+
+- Tablas antiguas creadas pero nunca pobladas son indistinguibles de tablas
+  vaciadas intencionalmente. Se preservan vacías, sin insertar demostraciones.
+- Si se borraron las propias tablas y los metadatos, no queda evidencia del
+  catálogo anterior: se trata como base nueva. No quitar esas estructuras
+  para vaciar el catálogo; eliminar únicamente los productos.
+- El mayor ID borrado antes de adoptar la base no puede reconstruirse si no
+  quedan registros de él. El contador parte del máximo todavía existente.
+- Esquemas externos/incompatibles o intervención manual en los metadatos no
+  forman parte de esta migración; hacer respaldo antes de actualizar.
+
+Eliminar es irreversible desde la aplicación; recuperar datos exige un respaldo.
+Tras error de red no repetir DELETE automáticamente: actualizar primero el
+listado para comprobar si el servidor ya lo eliminó. Las pestañas no se
+sincronizan automáticamente y sigue sin existir control de edición concurrente.
+
+
+## Verificación de etapa 6.1 — 2026-10-11
+
+clean test y package: 204 pruebas Java por comando, todas aprobadas, sin
+fallidas, errores ni omitidas; ambos finalizaron con BUILD SUCCESS. Node:
+38 pruebas aprobadas, sin fallidas ni omitidas. Se verificaron eliminación
+física, 204 vacío, 404, IDs inválidos, permisos, CSRF, rechazo de DELETE público,
+conservación de categorías y otros productos, migración, reinicios sin
+regeneración, carga inicial atómica y ausencia de reutilización de IDs.
+Las bases usadas fueron temporales; data/ mantuvo los mismos SHA-256.
+La comprobación manual del nuevo botón en navegador queda pendiente y está
+listada en PRUEBAS-FRONTEND.md.

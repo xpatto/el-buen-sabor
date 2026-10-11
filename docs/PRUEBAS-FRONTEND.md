@@ -118,10 +118,11 @@ capturas de escritorio y móvil. No se ejecutó la lista manual de Firefox.
 La interfaz requiere JavaScript moderno con módulos, fetch y BigInt. No hay
 modo offline ni actualizaciones en tiempo real entre pestañas: usar Actualizar
 listado. Las ediciones simultáneas conservan los límites SQLite documentados en
-API-ADMINISTRATIVA.md. No se cambian endpoints, contratos JSON ni esquema.
+API-ADMINISTRATIVA.md. La etapa 6 conservó los contratos; la ampliación 6.1 añade
+DELETE y metadatos de inicialización, manteniendo el formato JSON de los productos.
 Antes de publicar en Internet siguen aplicando los pendientes de SEGURIDAD.md.
 
-## Cierre verificado el 2026-10-11
+## Cierre de etapa 6 verificado el 2026-10-11
 
 | Comprobación | Ejecutadas | Aprobadas | Fallidas | Errores | Omitidas |
 | --- | ---: | ---: | ---: | ---: | ---: |
@@ -144,3 +145,56 @@ Problemas resueltos: tokenización de JSON con ceros iniciales inválidos y
 prueba de bienvenida MockMvc adaptada a su forward interno; la lectura real
 de la página raíz se comprobó además en Chromium. No se modificaron contratos
 ni validaciones del backend para resolver la precisión monetaria.
+
+## Lista manual adicional — etapa 6.1
+
+Ejecutar únicamente con SQLite desechable. Eliminar es irreversible; Ocultar
+sigue siendo reversible. Estos puntos están preparados, no marcados como
+pruebas de navegador ejecutadas para esta ampliación.
+
+- [ ] Pulsar Eliminar: comprobar nombre y advertencia. Cancelar y verificar
+  en Red que no se envió DELETE y que el producto permanece.
+- [ ] Confirmar: verificar DELETE con X-CSRF-TOKEN, respuesta 204 vacía,
+  controles bloqueados durante el envío y mensaje de éxito.
+- [ ] Actualizar el menú público: el producto eliminado ya no aparece.
+- [ ] Eliminar uno de los siete productos iniciales, reiniciar y comprobar
+  que sigue ausente y los demás conservan sus datos.
+- [ ] Eliminar todos, reiniciar y comprobar el catálogo vacío; dar de alta
+  un producto nuevo y comprobar que se puede seguir administrando.
+- [ ] Ocultar y reactivar otro producto: ambas acciones siguen funcionando.
+- [ ] Interrumpir la red al eliminar: aparece aviso sin repetición automática;
+  actualizar el listado antes de repetir.
+- [ ] Comprobar teclado, confirmación nativa accesible y botón de peligro en
+  escritorio y móvil; cerrar el editor si se elimina el producto editado.
+
+Las pruebas Node comprueban cancelación sin petición ni bloqueo, confirmación
+con nombre e irreversibilidad, ID largo exacto, token y ausencia de reintentos.
+requestJson acepta 204 sin consultar el cuerpo. Las pruebas Java usan bases
+temporales para migración, borrado, reinicio, permisos, CSRF y regresiones.
+
+
+## Cierre automatizado de etapa 6.1 — 2026-10-11
+
+| Comprobación | Ejecutadas | Aprobadas | Fallidas | Errores | Omitidas |
+| --- | ---: | ---: | ---: | ---: | ---: |
+| ./mvnw clean test | 204 | 204 | 0 | 0 | 0 |
+| ./mvnw package | 204 | 204 | 0 | 0 | 0 |
+| node --test src/test/js/*.test.mjs | 38 | 38 | 0 | 0 | 0 |
+
+Ambos comandos Maven terminaron con BUILD SUCCESS. Los XML de Surefire
+confirman el recuento Java. Son 242 pruebas distintas de Java y JavaScript;
+package repite las 204 Java, no añade casos distintos.
+
+En esta ampliación data/menu.db sí existía: su SHA-256 y el de los demás
+archivos de data/ son idénticos al estado previo. No se borraron productos
+de desarrollo. La prueba de regresión detectó que SQLite reutilizaba el mayor
+ID eliminado; el contador persistente lo evita también tras vaciar y reiniciar.
+
+La cobertura automatizada nueva es Java/Node. No se ejecutaron escenarios
+Chromium ni Firefox adicionales para la etapa 6.1; la lista manual anterior
+permanece pendiente. No confundirla con los 14 escenarios históricos de etapa 6.
+
+Revisión de los 75 archivos candidatos a Git: sin secretos reales identificados,
+claves privadas, hashes de producción ni bases de datos incluidas. Las únicas
+coincidencias de credenciales son valores ficticios de pruebas. git diff --check
+sin incidencias. Entrega mediante commit local, sin push ni despliegue.

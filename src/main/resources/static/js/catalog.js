@@ -71,6 +71,7 @@ export async function requestJson(url, { method = 'GET', body, token, signal } =
         };
         throw new ApiError(response.status, messages[response.status] || 'No se pudo completar la solicitud. Inténtalo más tarde.');
     }
+    if (response.status === 204) return null;
     if (!response.headers.get('Content-Type')?.includes('application/json')) {
         throw new ApiError(0, 'La respuesta no es válida. Recarga la página.');
     }

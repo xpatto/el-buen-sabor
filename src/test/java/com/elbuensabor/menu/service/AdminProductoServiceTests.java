@@ -81,6 +81,23 @@ class AdminProductoServiceTests {
         assertThatThrownBy(() -> service.actualizar(id, new ProductoRequest("N", "D", BigDecimal.ONE, 1L)))
                 .isInstanceOf(ProductoInvalidoException.class);
         assertThatThrownBy(() -> service.cambiarEstado(id, true)).isInstanceOf(ProductoInvalidoException.class);
+        assertThatThrownBy(() -> service.eliminar(id)).isInstanceOf(ProductoInvalidoException.class);
         verifyNoInteractions(products, categories);
     }
+    @Test
+    void deleteUsesExactIdAndDoesNotTouchCategories() {
+        when(products.eliminar(Long.MAX_VALUE)).thenReturn(1);
+        service.eliminar(Long.MAX_VALUE);
+        verify(products).eliminar(Long.MAX_VALUE);
+        verifyNoMoreInteractions(products);
+        verifyNoInteractions(categories);
+    }
+
+    @Test
+    void deletingMissingProductReturnsNotFound() {
+        assertThatThrownBy(() -> service.eliminar(99)).isInstanceOf(ProductoNoEncontradoException.class);
+        verify(products).eliminar(99);
+        verifyNoInteractions(categories);
+    }
+
 }

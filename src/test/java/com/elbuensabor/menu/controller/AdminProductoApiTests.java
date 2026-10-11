@@ -188,6 +188,8 @@ class AdminProductoApiTests extends SqliteIntegrationTest {
     @ParameterizedTest
     @ValueSource(strings = {"0", "-1", "abc", "9223372036854775808"})
     void invalidPathIdsReturn400(String id) throws Exception {
+        mvc.perform(delete(ROOT + "/" + id).with(user("admin").roles("ADMIN")).with(csrf()))
+                .andExpect(status().isBadRequest());
         mvc.perform(put(ROOT + "/" + id).with(user("admin").roles("ADMIN")).with(csrf())
                         .contentType("application/json").content(VALID)).andExpect(status().isBadRequest());
         mvc.perform(patch(ROOT + "/" + id + "/estado").with(user("admin").roles("ADMIN")).with(csrf())
@@ -195,22 +197,22 @@ class AdminProductoApiTests extends SqliteIntegrationTest {
     }
 
     @Test
-    void missingProductsReturn404AndDeleteIsNotImplemented() throws Exception {
+    void missingProductsReturn404() throws Exception {
         mvc.perform(put(ROOT + "/99999").with(user("admin").roles("ADMIN")).with(csrf())
                         .contentType("application/json").content(VALID))
                 .andExpect(status().isNotFound()).andExpect(jsonPath("$.codigo").value("PRODUCTO_NO_ENCONTRADO"));
         mvc.perform(patch(ROOT + "/99999/estado").with(user("admin").roles("ADMIN")).with(csrf())
                         .contentType("application/json").content("{\"activo\":false}"))
                 .andExpect(status().isNotFound()).andExpect(jsonPath("$.codigo").value("PRODUCTO_NO_ENCONTRADO"));
-        mvc.perform(delete(ROOT + "/1").with(user("admin").roles("ADMIN")).with(csrf()))
-                .andExpect(status().isMethodNotAllowed());
+        mvc.perform(delete(ROOT + "/99999").with(user("admin").roles("ADMIN")).with(csrf()))
+                .andExpect(status().isNotFound()).andExpect(jsonPath("$.codigo").value("PRODUCTO_NO_ENCONTRADO"));
     }
 
     @ParameterizedTest
-    @ValueSource(strings = {"GET", "POST", "PUT", "PATCH"})
+    @ValueSource(strings = {"GET", "POST", "PUT", "PATCH", "DELETE"})
     void allOperationsRequireAdminAndWritesRequireValidCsrf(String method) throws Exception {
         String path = switch (method) {
-            case "PUT" -> ROOT + "/1";
+            case "PUT", "DELETE" -> ROOT + "/1";
             case "PATCH" -> ROOT + "/1/estado";
             default -> ROOT;
         };
@@ -233,4 +235,33 @@ class AdminProductoApiTests extends SqliteIntegrationTest {
         }
         assertThat(jdbc.queryForList("SELECT * FROM productos ORDER BY id")).isEqualTo(before);
     }
+    @Test
+    void deleteRemovesOnlyRequestedProductAndReturnsEmpty204() throws Exception {
+        var others = jdbc.queryForList("SELECT * FROM productos WHERE id <> 1 ORDER BY id");
+        var categories = jdbc.queryForList("SELECT * FROM categorias ORDER BY id");
+        mvc.perform(delete(ROOT + "/1").with(user("admin").roles("ADMIN")).with(csrf()))
+                .andExpect(status().isNoContent()).andExpect(content().string(""));
+        assertThat(jdbc.queryForObject("SELECT count(*) FROM productos WHERE id=1", Integer.class)).isZero();
+        assertThat(jdbc.queryForList("SELECT * FROM productos ORDER BY id")).isEqualTo(others);
+        assertThat(jdbc.queryForList("SELECT * FROM categorias ORDER BY id")).isEqualTo(categories);
+        mvc.perform(get("/api/productos")).andExpect(status().isOk())
+                .andExpect(jsonPath("$[*].id", not(hasItem(1))));
+        mvc.perform(get(ROOT).with(user("admin").roles("ADMIN"))).andExpect(status().isOk())
+                .andExpect(jsonPath("$[*].id", not(hasItem(1))));
+        mvc.perform(delete(ROOT + "/1").with(user("admin").roles("ADMIN")).with(csrf()))
+                .andExpect(status().isNotFound());
+    }
+
+    @Test
+    void deleteCannotBeUsedOnPublicApiOrCategories() throws Exception {
+        var before = jdbc.queryForList("SELECT * FROM productos ORDER BY id");
+        for (String path : new String[]{"/api/productos/1", "/api/categorias/1"}) {
+            mvc.perform(delete(path).with(user("admin").roles("ADMIN")).with(csrf()))
+                    .andExpect(status().isForbidden());
+        }
+        mvc.perform(delete("/api/admin/categorias/1").with(user("admin").roles("ADMIN")).with(csrf()))
+                .andExpect(status().isNotFound());
+        assertThat(jdbc.queryForList("SELECT * FROM productos ORDER BY id")).isEqualTo(before);
+    }
+
 }

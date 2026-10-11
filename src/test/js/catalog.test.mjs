@@ -71,3 +71,18 @@ test('rechaza respuestas no JSON y JSON mal formado', async () => {
     await assert.rejects(requestJson('/api/productos',{},async () => new Response('<html>login</html>')));
     assert.throws(() => parseCatalogJson('{"precio":01.00}'));
 });
+
+test('DELETE acepta 204 vacío sin leer JSON y conserva CSRF', async () => {
+    let calls=0;
+    const result=await requestJson('/api/admin/productos/9223372036854775807',
+        {method:'DELETE',token:'ficticio'},async (url, options)=>{
+            calls++;
+            assert.equal(url,'/api/admin/productos/9223372036854775807');
+            assert.equal(options.method,'DELETE');
+            assert.equal(options.credentials,'same-origin');
+            assert.equal(options.headers['X-CSRF-TOKEN'],'ficticio');
+            return {ok:true,status:204,headers:new Headers(),text:()=>{throw new Error('No debe leer cuerpo');}};
+        });
+    assert.equal(result,null);
+    assert.equal(calls,1);
+});

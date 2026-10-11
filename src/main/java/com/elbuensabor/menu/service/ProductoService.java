@@ -85,6 +85,14 @@ public class ProductoService {
         return respuestaAdministrativa(producto, categoriaExistente(producto.categoriaId()));
     }
 
+    @Transactional
+    public void eliminar(long id) {
+        validarId(id);
+        if (products.eliminar(id) == 0) {
+            throw new ProductoNoEncontradoException();
+        }
+    }
+
     private long precioEnCentavos(BigDecimal precio) {
         if (precio == null || precio.signum() <= 0 || precio.scale() > 2
                 || precio.compareTo(BigDecimal.valueOf(Long.MAX_VALUE, 2)) > 0) {

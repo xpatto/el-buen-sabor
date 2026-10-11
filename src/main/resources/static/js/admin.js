@@ -1,7 +1,16 @@
 import { requestJson, formatPrice, normalizePrice, productBody, element } from './catalog.js';
 
-const panel = document.querySelector('#admin-panel');
+const panel = typeof document === 'undefined' ? null : document.querySelector('#admin-panel');
 if (panel) initializeAdmin();
+
+export async function deleteProductWithConfirmation(product, token, {
+    confirm = globalThis.confirm, request = requestJson, onConfirmed = () => {}
+} = {}) {
+    if (!confirm('¿Eliminar definitivamente ' + product.nombre + '? Esta acción no se puede deshacer.')) return false;
+    onConfirmed();
+    await request('/api/admin/productos/' + encodeURIComponent(product.id), { method: 'DELETE', token });
+    return true;
+}
 
 function initializeAdmin() {
     const token = document.querySelector('meta[name="csrf-token"]')?.content;
@@ -60,7 +69,11 @@ function initializeAdmin() {
             toggle.type = 'button';
             toggle.setAttribute('aria-label', (product.activo ? 'Ocultar ' : 'Reactivar ') + product.nombre);
             toggle.addEventListener('click', () => changeAvailability(product));
-            actions.append(edit, toggle);
+            const remove = element('button', 'button danger', 'Eliminar');
+            remove.type = 'button';
+            remove.setAttribute('aria-label', 'Eliminar definitivamente ' + product.nombre);
+            remove.addEventListener('click', () => deleteProduct(product));
+            actions.append(edit, toggle, remove);
             card.append(summary, actions);
             return card;
         }));
@@ -174,6 +187,31 @@ function initializeAdmin() {
         } finally {
             setBusy(false);
             if (saved && !sessionEnded) refresh.focus();
+        }
+    }
+
+    async function deleteProduct(product) {
+        if (busy || sessionEnded) return;
+        let deleted = false;
+        try {
+            deleted = await deleteProductWithConfirmation(product, token, {
+                onConfirmed: () => {
+                    setBusy(true);
+                    error.textContent = '';
+                    status.textContent = 'Eliminando producto…';
+                }
+            });
+            if (!deleted) return;
+            if (editingId === product.id) closeEditor();
+            await reloadProducts();
+            status.textContent = 'Producto eliminado definitivamente.'
+                + (products.length ? '' : ' El catálogo está vacío.');
+        } catch (failure) {
+            status.textContent = deleted ? 'El producto se eliminó, pero no pudimos actualizar el listado.' : '';
+            showError(failure, !deleted);
+        } finally {
+            setBusy(false);
+            if (deleted && !sessionEnded) refresh.focus();
         }
     }
 
