@@ -15,6 +15,7 @@ import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.transaction.annotation.Transactional;
 
 import static org.hamcrest.Matchers.everyItem;
+import static org.hamcrest.Matchers.contains;
 import static org.hamcrest.Matchers.comparesEqualTo;
 import static org.hamcrest.Matchers.hasSize;
 import static org.hamcrest.Matchers.is;
@@ -73,6 +74,24 @@ class MenuApiTests extends SqliteIntegrationTest {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$", hasSize(count)))
                 .andExpect(jsonPath("$[*].categoria", everyItem(is(name))));
+    }
+
+    @ParameterizedTest
+    @CsvSource(textBlock = """
+            2, Chilaquiles verdes, comida, Comida / Lonchería, 75.00, Totopos en salsa verde con crema y queso. Disponibles con o sin picante.
+            4, Licuado de fresa, bebidas, Cafetería y Bebidas, 40.00, Fresa licuada con leche. Opción con leche regular o leche sin lactosa.
+            """)
+    void initialVariationsAppearInFullMenuAndCategoryWithoutChangingProductDetails(
+            long id, String name, String slug, String category, double price, String description) throws Exception {
+        String product = "$[?(@.id == " + id + ")]";
+        for (String path : new String[]{"/api/productos", "/api/productos?categoria=" + slug}) {
+            mvc.perform(get(path)).andExpect(status().isOk())
+                    .andExpect(jsonPath(product, hasSize(1)))
+                    .andExpect(jsonPath(product + ".nombre", contains(name)))
+                    .andExpect(jsonPath(product + ".categoria", contains(category)))
+                    .andExpect(jsonPath(product + ".precio", contains(price)))
+                    .andExpect(jsonPath(product + ".descripcion", contains(description)));
+        }
     }
 
     @Test

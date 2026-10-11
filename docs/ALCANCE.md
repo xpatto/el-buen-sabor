@@ -150,6 +150,22 @@ código para ejecución local: inicio rápido, generación segura de BCrypt,
 pruebas desde copia aislada y revisión de archivos/historial Git. Sustituye la
 preparación 7A solicitada antes; no incluye hosting, dominio ni infraestructura.
 
+## Variaciones simples en las descripciones iniciales
+
+Las bases nuevas incluyen «Disponibles con o sin picante.» en Chilaquiles
+verdes (ID 2) y «Opción con leche regular o leche sin lactosa.» en Licuado de
+fresa (ID 4). Son texto de la descripción en las tarjetas, sin selectores ni
+pedidos. Se conservan nombres, IDs, precios, categorías y carga inicial única.
+Las bases existentes no reciben actualizaciones automáticas ni recuperan
+productos eliminados; pueden editar estas descripciones manualmente en /admin.
+
+Verificado el 2026-10-11: clean test y package aprobaron 223 pruebas cada uno;
+Node aprobó 38, sin fallidas, errores ni omitidas. Chromium mostró las dos
+descripciones y verificó filtros comida/bebidas y login/panel con SQLite nuevo
+temporal. Ediciones y borrados sobrevivieron a reinicios en las pruebas;
+todos los archivos de data/ conservaron su SHA-256. Sin cambios de interfaz,
+esquema, autenticación ni dependencias. Solo commit local, sin push.
+
 ## Fuera del alcance
 
 - Carrito, pagos, pedidos e inventario.

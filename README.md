@@ -196,7 +196,7 @@ Respuesta inicial con `categoria=comida` (`200 OK`):
     "nombre": "Chilaquiles verdes",
     "categoria": "Comida / Lonchería",
     "precio": 75.00,
-    "descripcion": "Totopos en salsa verde con crema y queso."
+    "descripcion": "Totopos en salsa verde con crema y queso. Disponibles con o sin picante."
   }
 ]
 ```

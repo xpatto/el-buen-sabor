@@ -38,6 +38,10 @@ class SqliteInitializationMigrationTests {
             var jdbc = context.getBean(JdbcTemplate.class);
             assertThat(jdbc.queryForObject("SELECT count(*) FROM categorias", Integer.class)).isEqualTo(3);
             assertThat(jdbc.queryForObject("SELECT count(*) FROM productos", Integer.class)).isEqualTo(7);
+            assertThat(jdbc.queryForObject("SELECT descripcion FROM productos WHERE id=2", String.class))
+                    .isEqualTo("Totopos en salsa verde con crema y queso. Disponibles con o sin picante.");
+            assertThat(jdbc.queryForObject("SELECT descripcion FROM productos WHERE id=4", String.class))
+                    .isEqualTo("Fresa licuada con leche. Opción con leche regular o leche sin lactosa.");
             context.getBean(com.elbuensabor.menu.service.ProductoService.class).eliminar(1);
             jdbc.update("UPDATE productos SET precio_centavos=1234, descripcion='Edición preservada' WHERE id=2");
             jdbc.update("INSERT INTO productos (id,nombre,descripcion,precio_centavos,categoria_id) VALUES (99,'Nuevo','Añadido',100,1)");
@@ -67,6 +71,28 @@ class SqliteInitializationMigrationTests {
                 assertThat(jdbc.queryForObject("SELECT count(*) FROM categorias", Integer.class)).isEqualTo(3);
             });
         }
+    }
+
+    @ParameterizedTest
+    @ValueSource(ints = {2, 4})
+    void variationSeedPreservesAdministrativeEditsAndDeletionAcrossRestarts(int id) {
+        application().run(context -> {
+            assertThat(context).hasNotFailed();
+            context.getBean(JdbcTemplate.class).update(
+                    "UPDATE productos SET descripcion = ? WHERE id = ?", "Descripción elegida por el administrador", id);
+        });
+        application().run(context -> {
+            assertThat(context).hasNotFailed();
+            assertThat(context.getBean(JdbcTemplate.class).queryForObject(
+                    "SELECT descripcion FROM productos WHERE id = ?", String.class, id))
+                    .isEqualTo("Descripción elegida por el administrador");
+            context.getBean(com.elbuensabor.menu.service.ProductoService.class).eliminar(id);
+        });
+        application().run(context -> {
+            assertThat(context).hasNotFailed();
+            assertThat(context.getBean(JdbcTemplate.class).queryForObject(
+                    "SELECT count(*) FROM productos WHERE id = ?", Integer.class, id)).isZero();
+        });
     }
 
     @Test

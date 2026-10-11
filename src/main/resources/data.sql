@@ -16,7 +16,7 @@ SELECT 1, 'Torta de jamón', 'Jamón con queso y verduras.', 4500, id FROM categ
 ON CONFLICT (id) DO NOTHING;
 
 INSERT INTO productos (id, nombre, descripcion, precio_centavos, categoria_id)
-SELECT 2, 'Chilaquiles verdes', 'Totopos en salsa verde con crema y queso.', 7500, id FROM categorias WHERE slug = 'comida' AND (SELECT completada FROM inicializacion_catalogo WHERE id=1) = 0
+SELECT 2, 'Chilaquiles verdes', 'Totopos en salsa verde con crema y queso. Disponibles con o sin picante.', 7500, id FROM categorias WHERE slug = 'comida' AND (SELECT completada FROM inicializacion_catalogo WHERE id=1) = 0
 ON CONFLICT (id) DO NOTHING;
 
 INSERT INTO productos (id, nombre, descripcion, precio_centavos, categoria_id)
@@ -24,7 +24,7 @@ SELECT 3, 'Café americano', 'Café negro caliente.', 3000, id FROM categorias W
 ON CONFLICT (id) DO NOTHING;
 
 INSERT INTO productos (id, nombre, descripcion, precio_centavos, categoria_id)
-SELECT 4, 'Licuado de fresa', 'Fresa licuada con leche.', 4000, id FROM categorias WHERE slug = 'bebidas' AND (SELECT completada FROM inicializacion_catalogo WHERE id=1) = 0
+SELECT 4, 'Licuado de fresa', 'Fresa licuada con leche. Opción con leche regular o leche sin lactosa.', 4000, id FROM categorias WHERE slug = 'bebidas' AND (SELECT completada FROM inicializacion_catalogo WHERE id=1) = 0
 ON CONFLICT (id) DO NOTHING;
 
 INSERT INTO productos (id, nombre, descripcion, precio_centavos, categoria_id)
