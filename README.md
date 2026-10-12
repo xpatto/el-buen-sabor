@@ -26,14 +26,14 @@ Organicé el proyecto en seis etapas para construir cada componente de manera pr
 
 | Etapa | ¿En qué consistió? |
 | --- | --- |
-| **1. Inicio del proyecto** | Crear la estructura con Java 21, Spring Boot y Maven Wrapper. |
-| **2. Base de datos** | Definir categorías y productos e integrar SQLite para guardar la información. |
-| **3. API REST** | Desarrollar los servicios que entregan productos y categorías, con filtrado por categoría. |
-| **4. Autenticación** | Proteger el acceso administrativo mediante Spring Security. |
-| **5. Administración** | Implementar las operaciones para agregar, editar y cambiar la visibilidad de productos. |
-| **6. Interfaz web** | Construir el menú y el panel administrativo responsivos y conectarlos con la API. |
+| **1. Inicio del proyecto** | Conceptualize la estructura y alcances del proyecto. |
+| **2. Base de datos** | Defini categorías y productos, integre SQLite para guardar la información. |
+| **3. API REST** | Desarrolle los servicios que entregan productos y categorías, con filtrado por categoría. |
+| **4. Autenticación** | Implemente Spring Security para la autenticacion del administrador. |
+| **5. Administración** | Implemente las operaciones para agregar, editar y cambiar la visibilidad de productos. |
+| **6. Interfaz web** | Construi el menú y el panel administrativo responsivos y conectarlos con la API. |
 
-**Ajustes finales:** incorporé la eliminación de productos y un modo de demostración con inicio automático para Windows y Linux, facilitando la revisión del proyecto.
+Nota: Mi idea de proyecto originalmente era màs ambiciosa que el resultado final, por problemas de ajenda me vi forzado a realizar muchos recortes en mi vision original de un backend con muchas mas funcionalidades, no obstante quise dotar al proyecto de una base solida y extremadamente escalable, considero que la estructura de mi proyecto es buena y que la implementacion de posibles mejoras no deberian de presentar ningun problema a cualquier programador trasnochado (como el que escribe estas lineas) el editar el proyecto.
 
 ## Tecnologías utilizadas
 
@@ -48,9 +48,9 @@ Organicé el proyecto en seis etapas para construir cada componente de manera pr
 
 ## ¿Cómo ejecutar el proyecto?
 
-**Requisito:** tener instalado **JDK 21**. La primera ejecución necesita Internet para descargar las dependencias; no hace falta instalar Maven ni SQLite.
+**Requisito:** tener una computadoa (obligatorio) con Java **JDK 21** instalado (tambien obligatorio). La primera ejecución necesita Internet para descargar las dependencias; no hace falta instalar Maven ni SQLite.
 
-1. Descarga este repositorio desde **Code → Download ZIP** y descomprímelo, o clónalo con Git:
+1. Recomiendo usar Git para clonar el proyecto con el siguiente comando:
 
    ```bash
    git clone https://github.com/xpatto/el-buen-sabor.git
@@ -58,7 +58,7 @@ Organicé el proyecto en seis etapas para construir cada componente de manera pr
 
 2. Abre la carpeta del proyecto y utiliza el lanzador de tu sistema:
 
-   - **Windows 10/11:** doble clic en `iniciar-windows.bat`.
+   - **Windows 10/11:** ejcutar `iniciar-windows.bat` (no es un virus tienen que creerme).
    - **Linux:** abre una terminal en la carpeta y ejecuta `bash iniciar-linux.sh` (también funciona `./iniciar-linux.sh` si tiene permiso de ejecución).
 
 3. Espera el mensaje `Started MenuApplication` y visita las siguientes direcciones:
@@ -72,7 +72,7 @@ Organicé el proyecto en seis etapas para construir cada componente de manera pr
 
 La aplicación crea automáticamente una base de datos local con **3 categorías y 7 productos de ejemplo**. Para detenerla, presiona **Ctrl+C** en la ventana donde está ejecutándose.
 
-> **Nota:** el acceso `admin/admin` es únicamente para la demostración local. Esta versión se ejecuta en `127.0.0.1` y no debe exponerse a Internet.
+Nota: A pesar del "crunch" auto-impuesto en este proyecto me parecio un gran ejercicio de programacion y el hecho de que pudiera implementarlo en Java solo hizo que mejorara la experiencia.
 
 ---
 
