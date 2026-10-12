@@ -1,11 +1,11 @@
-# Seguridad — configuración vigente hasta etapa 6
+# Seguridad — configuración vigente
 
 ## Configuración
 
 Se requieren `ADMIN_USERNAME` (no vacío ni con espacios exteriores) y
-`ADMIN_PASSWORD_HASH` en todos los perfiles. El hash debe tener formato BCrypt
+`ADMIN_PASSWORD_HASH` en todos los perfiles normales (incluidos dev y prod). El hash debe tener formato BCrypt
 $2a$, $2b$ o $2y$, sin prefijo `{bcrypt}`. No se aceptan contraseñas en texto
-plano como configuración ni hay usuario predeterminado. Un hash sintácticamente
+plano como configuración ni hay usuario predeterminado en esos perfiles. Un hash sintácticamente
 válido no demuestra que el operador conozca su contraseña: verificar el acceso
 antes de publicar. El encoder usa coste 12 al generar; se admiten costes BCrypt
 4–31 por compatibilidad. Para producción generar con una herramienta local
@@ -16,6 +16,34 @@ Las variables deben inyectarse mediante el gestor de secretos del despliegue.
 `dev` es el perfil predeterminado, HTTP en 127.0.0.1; no usarlo en Internet.
 Seleccionar explícitamente `SPRING_PROFILES_ACTIVE=prod` en producción.
 Configurar `APP_DB_PATH` en un directorio persistente con permisos restringidos.
+
+## Demostración local
+
+La única excepción explícita es `demo`, para evaluar el proyecto con `admin/admin`.
+El hash se genera en memoria mediante el PasswordEncoder BCrypt existente;
+no se guarda un hash ni se modifica el login. Se mantienen ROLE_ADMIN, sesiones,
+CSRF, CSP y las rutas protegidas. Las cookies locales son HttpOnly y SameSite=Lax;
+Secure permanece desactivado para HTTP local, igual que en dev.
+
+Antes de instanciar SQLite o Tomcat se valida que demo sea el único perfil,
+que la dirección efectiva sea exactamente 127.0.0.1 y que las propiedades de
+conexión apunten exclusivamente a `data/menu-demo.db`. Se comprueba también
+la dirección final de la fábrica Tomcat. Se rechazan perfiles mezclados,
+direcciones alternativas y URLs de base diferentes, incluida la propiedad
+específica Hikari. APP_DB_PATH no selecciona la base demo. No se admiten enlaces
+del archivo demo a otra base ni un archivo compartido con menu.db.
+
+Las credenciales demo son públicas, deliberadas y exclusivas de este perfil.
+Cualquier usuario local que pueda acceder al puerto puede utilizarlas; no guardar
+datos sensibles en la demostración ni exponerla con túneles, proxies o reenvíos.
+El enlace administrativo oculto no es una barrera de seguridad: /admin conserva
+su autenticación. Para datos propios usa dev con credenciales únicas.
+
+Windows usa el mismo Maven Wrapper 3.3.4 y Maven 3.9.11 mediante Java, sin
+PowerShell. `scripts/PrepararMaven.java` descarga el JAR oficial desde Maven
+Central por HTTPS, verifica su SHA-256 fijado en el código y también comprueba
+la copia guardada antes de usarla. El JAR está ignorado por Git; no es un secreto.
+No se modifican versiones ni dependencias de la aplicación.
 
 ## HTTPS y proxy
 
@@ -152,3 +180,25 @@ respaldos, credenciales, logs y configuración: 401 anónimo y 403 incluso con A
 El JAR no incluye TestAdminCredentials, el generador ni archivos SQLite/secretos.
 Resultados y límites de dependencias en [EJECUCION-LOCAL.md](EJECUCION-LOCAL.md).
 Los requisitos de Internet anteriores se conservan solo como referencia futura.
+
+## Verificación del modo demo — 2026-10-11
+
+`clean test` y `package`: 245 pruebas Java aprobadas por comando, 0 fallidas,
+0 errores y 0 omitidas. Node: 38 aprobadas, 0 fallidas, 0 omitidas ni canceladas.
+Los 22 casos Java nuevos comprueban el modo demo y su bootstrap; la regresión
+conserva las pruebas de credenciales inválidas en prod, HTTPS, proxy y cookies.
+
+Tomcat real aceptó admin/admin con el token del formulario y rechazó login
+incorrecto, API administrativa sin sesión y escrituras sin CSRF. CRUD, cambio
+de estado y logout permanecieron operativos. Dev, prod y el perfil por defecto
+rechazaron credenciales ausentes. Se rechazaron binds alternativos, perfiles
+mezclados/incluidos y cambios de conexión SQLite antes de abrir la base demo.
+La base normal ficticia conservó sus bytes; las ediciones y eliminaciones demo
+sobrevivieron al reinicio. Los archivos originales de data/ no se modificaron.
+
+La revisión de archivos candidatos a Git no identificó secretos reales ni
+bases versionadas: admin/admin es la credencial pública autorizada exclusivamente
+para demo; el SHA-256 del wrapper identifica un artefacto público. No se publica
+su JAR descargado ni credenciales de dev/prod. No cambió SecurityConfig, el
+esquema, las APIs ni la interfaz. El bootstrap Java fue ejecutado en Linux;
+Windows 10 real sigue pendiente. El modo demo no habilita exposición a Internet.

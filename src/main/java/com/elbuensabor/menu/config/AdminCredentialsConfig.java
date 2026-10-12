@@ -4,6 +4,7 @@ import java.util.regex.Pattern;
 
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.Profile;
 import org.springframework.core.env.Environment;
 import org.springframework.security.core.userdetails.User;
 import org.springframework.security.core.userdetails.UserDetailsService;
@@ -21,6 +22,7 @@ public class AdminCredentialsConfig {
     }
 
     @Bean
+    @Profile("!demo")
     UserDetailsService adminUserDetailsService(Environment environment) {
         String username = environment.getProperty("ADMIN_USERNAME", "");
         String hash = environment.getProperty("ADMIN_PASSWORD_HASH", "");

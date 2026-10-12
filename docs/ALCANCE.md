@@ -166,6 +166,20 @@ temporal. Ediciones y borrados sobrevivieron a reinicios en las pruebas;
 todos los archivos de data/ conservaron su SHA-256. Sin cambios de interfaz,
 esquema, autenticación ni dependencias. Solo commit local, sin push.
 
+## Inicio automático y demostración local
+
+Ampliación autorizada posterior a 92bbe90: perfil demo exclusivo, admin/admin
+con BCrypt en memoria y validaciones de arranque para impedir escucha fuera de
+127.0.0.1, mezcla de perfiles y selección de una base distinta de menu-demo.db.
+Dev/prod conservan credenciales obligatorias; no se cambia la cadena de seguridad.
+
+Lanzadores Bash y Windows con JDK 21 y Maven Wrapper, comprobación de puerto,
+rutas con espacios y mensajes de inicio. Windows arranca el wrapper oficial
+mediante Java para no depender de PowerShell; no cambian sus versiones ni las
+dependencias de la aplicación. SQLite demo es independiente, persistente y usa
+el esquema, migración y semillas existentes. No se cambian APIs ni interfaz.
+El inicio rápido demo precede a las instrucciones avanzadas anteriores.
+
 ## Fuera del alcance
 
 - Carrito, pagos, pedidos e inventario.
@@ -203,3 +217,19 @@ finalizaron con BUILD SUCCESS, 204 pruebas cada uno, 0 fallidas, 0 errores y
 La base de desarrollo y los demás archivos de data/ conservaron su SHA-256.
 La lista manual de navegador de esta ampliación sigue pendiente; no se declara
 como ejecutada. Detalles en docs/PRUEBAS-FRONTEND.md.
+
+Cierre del modo demo (2026-10-11): `./mvnw clean test` y `./mvnw package`
+aprobaron 245 pruebas Java cada uno; `node --test src/test/js/*.test.mjs`
+aprobó 38. Cero fallidas, errores u omitidas. Las nuevas pruebas incluyen
+Tomcat real, credenciales demo, CSRF, operaciones, reinicio, separación de bases,
+rechazos de configuración y verificación de integridad del wrapper.
+
+El lanzador Linux se ejecutó en una copia temporal con espacios, desde Bash y
+Fish, con red local aislada para respetar el servicio existente en 8080. También
+pasó el caso ZIP sin permisos ejecutables y la detección de puerto ocupado.
+Chromium verificó siete tarjetas, variaciones, filtros, ausencia de enlace
+administrativo y login/panel. Ctrl+C cerró Tomcat y SQLite; el reinicio conservó
+una edición y una eliminación. Los archivos originales de data/ conservaron
+su SHA-256. Windows recibió revisión estática de sintaxis, comillas y flujo;
+el bootstrap Java descargó/verificó el wrapper y compiló en Linux. **No se ha
+ejecutado el lanzador en Windows 10 real.** Sin push, despliegue ni etapas nuevas.

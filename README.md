@@ -6,7 +6,66 @@ Dos páginas: menú en / y administración con inicio de sesión en /admin.
 El menú público no muestra un enlace administrativo; se accede escribiendo
 directamente `/admin` en la URL. La autenticación y las operaciones se conservan.
 
-## Inicio rápido
+## Inicio rápido — Modo demostración
+
+Necesitas **JDK 21** e Internet para la primera descarga de Maven y dependencias.
+No necesitas instalar Maven, SQLite ni Node para ejecutar la aplicación.
+Puedes descargar y extraer **Code → Download ZIP** desde
+[xpatto/el-buen-sabor](https://github.com/xpatto/el-buen-sabor), o clonar:
+
+```bash
+git clone https://github.com/xpatto/el-buen-sabor.git
+cd el-buen-sabor
+```
+
+Si el repositorio es privado, necesitas acceso del propietario. Comprueba
+`java -version` y `javac -version`: ambos deben indicar 21. Si tienes
+`JAVA_HOME` configurado, también debe apuntar a ese JDK.
+
+**Windows:** instala JDK 21, descarga y extrae el repositorio y haz doble clic
+en `iniciar-windows.bat`. No hace falta abrir PowerShell, modificar políticas de
+ejecución ni usar permisos de administrador. El wrapper utiliza Java y descarga
+su JAR oficial verificado; ese archivo local no se incorpora a Git.
+
+**Linux (Bash o Fish):** instala JDK 21, descarga el repositorio y ejecuta:
+
+```bash
+./iniciar-linux.sh
+# Si el ZIP no conservó el permiso de ejecución:
+# bash iniciar-linux.sh
+```
+
+Ambos lanzadores se sitúan en la carpeta del proyecto, admiten espacios en la
+ruta y comprueban el puerto 8080. Si está ocupado, libera el puerto o cierra tu
+otra instancia antes de reintentar; el lanzador no termina procesos ajenos.
+La primera descarga puede tardar. Espera el mensaje `Started MenuApplication`
+de Spring Boot y abre:
+
+- Menú: <http://localhost:8080/>.
+- Administración: <http://localhost:8080/admin>, **usuario `admin`, contraseña `admin`**.
+  Escribe la URL directamente; no hay enlace administrativo en el menú público.
+
+Mantén abierta la terminal. Para detener, pulsa **Ctrl+C**; en Windows confirma
+la finalización si la consola lo solicita. Los errores del lanzador Windows
+permanecen visibles hasta pulsar una tecla.
+
+Estas credenciales son públicas y **solo para evaluación local**. El perfil
+`demo` escucha exclusivamente en `127.0.0.1`; rechaza otras direcciones y
+combinaciones con otros perfiles, incluido `prod`. No publiques ni reenvíes
+este puerto mediante túneles o proxies.
+
+SQLite crea automáticamente **`data/menu-demo.db`**, con tres categorías y siete
+productos, incluidas las variaciones de chilaquiles y licuado. Volver a ejecutar
+el lanzador conserva tus altas, ediciones, ocultaciones y eliminaciones; cerrar
+no borra ni regenera datos. La base normal **`data/menu.db` permanece separada**.
+Demo ignora `APP_DB_PATH` y rechaza cambios de la URL SQLite hacia otra base.
+Para una demostración desde cero, usa otra copia del repositorio en una carpeta
+temporal; no borres bases que quieras conservar.
+
+Los perfiles `dev` y `prod` siguen exigiendo credenciales propias. Su configuración
+se explica a continuación y en [EJECUCION-LOCAL.md](docs/EJECUCION-LOCAL.md).
+
+## Configuración avanzada — Credenciales propias
 
 Para uso local. Necesitas **Git, JDK 21** (incluye `java` y `javac`) e Internet
 para la primera descarga de Maven y dependencias. No necesitas Maven instalado,
@@ -52,7 +111,7 @@ set -gx SPRING_PROFILES_ACTIVE dev
 
 El usuario no debe estar vacío ni tener espacios al principio o al final. Las
 variables duran esta sesión de terminal; para otra sesión repite la configuración
-(puedes usar la misma contraseña). No hay credenciales predeterminadas.
+(puedes usar la misma contraseña). En estos perfiles no hay credenciales predeterminadas.
 No compartas el entorno ni actives trazas de shell mientras contiene secretos.
 
 - Menú público: <http://localhost:8080/>.
@@ -256,13 +315,13 @@ No hay eliminación de categorías ni gestión de usuarios.
 
 ## Base de datos
 
-Al ejecutar la aplicación desde la raíz se crea `./data/menu.db` automáticamente
+En dev/prod, al ejecutar desde la raíz se crea `./data/menu.db` automáticamente
 si no existe. `data/.gitkeep` conserva el directorio en el repositorio.
 Spring ejecuta `schema.sql` y `data.sql` al arrancar; no hay un paso manual de SQL.
 No se necesitan usuario ni contraseña. Hikari ejecuta `PRAGMA foreign_keys=ON`
 en cada conexión física nueva, incluidas las que añade al pool posteriormente.
 
-Para cambiar la ubicación con Fish (el directorio padre debe existir):
+Para cambiar la ubicación en dev/prod con Fish (el directorio padre debe existir):
 
 ```fish
 mkdir -p /ruta/local/datos
@@ -408,3 +467,23 @@ Node aprobó 38, sin fallidas, errores ni omitidas. Inicio rápido verificado en
 Fish y Bash desde una copia Git local aislada; Windows no ejecutado. Se revisaron
 los ocho commits previos y los archivos nuevos sin secretos reales identificados.
 Evidencia y límites en [EJECUCION-LOCAL.md](docs/EJECUCION-LOCAL.md).
+
+## Verificación del inicio automático (2026-10-11)
+
+| Comando | Aprobadas | Fallidas | Errores | Omitidas |
+| --- | ---: | ---: | ---: | ---: |
+| `./mvnw clean test` | 245 | 0 | 0 | 0 |
+| `./mvnw package` | 245 | 0 | 0 | 0 |
+| `node --test src/test/js/*.test.mjs` | 38 | 0 | 0 | 0 |
+
+Package repite los mismos casos Java. Se comprobó el lanzador Linux desde Bash
+y Fish en una copia temporal con espacios, también como ZIP sin permisos de
+ejecución: login, menú en Chromium, filtros, CSRF, persistencia y Ctrl+C correctos.
+El catálogo normal quedó intacto. La comprobación de puerto ocupado no terminó
+ningún proceso ajeno. Todos los archivos originales de data/ conservaron su SHA-256.
+
+El lanzador Windows y mvnw.cmd tienen revisión estática de sintaxis y rutas;
+el bootstrap Java descargó el wrapper oficial, verificó su integridad y ejecutó
+Maven/package en Linux. **La prueba real mediante doble clic en Windows 10 sigue
+pendiente**. No se hizo despliegue ni push. Detalles en
+[SEGURIDAD.md](docs/SEGURIDAD.md) y [ALCANCE.md](docs/ALCANCE.md).
