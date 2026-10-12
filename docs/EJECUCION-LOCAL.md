@@ -2,7 +2,9 @@
 
 El objetivo es clonar y ejecutar en el equipo del lector. No se requiere
 alojamiento, dominio, Docker, despliegue ni configuración de producción.
-Las instrucciones principales para Fish están al principio del README.
+El README explica el inicio automático del modo demo. Este documento conserva
+la configuración avanzada del perfil dev con credenciales propias, usando
+Bash o PowerShell.
 
 ## Bash en Linux
 
@@ -47,12 +49,15 @@ prueba_local=$(mktemp -d)
 APP_DB_PATH="$prueba_local/menu.db" ./mvnw spring-boot:run
 ```
 
-No elimina ni reemplaza data/menu.db. Las pruebas automáticas son los mismos
-comandos Maven/Node del README y no necesitan credenciales reales.
+No elimina ni reemplaza data/menu.db. Las pruebas automatizadas se ejecutan
+con `./mvnw clean test`, `./mvnw package` y, si se dispone de Node.js,
+`node --test src/test/js/*.test.mjs`; no necesitan credenciales reales.
 
 ## Windows con PowerShell
 
-Alternativa documentada; **no ejecutada en Windows durante este cierre**.
+Esta alternativa avanzada configura el perfil dev con credenciales propias;
+sus pasos de PowerShell no se han validado en Windows 10. Para una demostración
+sencilla en Windows, utiliza `iniciar-windows.bat`, comprobado en ese sistema.
 Instala Git y JDK 21, abre una consola PowerShell interactiva (no ISE), y comprueba
 que java y javac resuelven el JDK correcto. No actives transcripción de terminal
 ni guardes credenciales con `setx`.
@@ -102,8 +107,9 @@ a la base habitual. No borres la base real.
 
 - Java distinto de 21: corregir PATH/JAVA_HOME y abrir otra terminal.
 - Permiso denegado en Linux: `chmod +x mvnw` (Git conserva el bit ejecutable).
-- Puerto 8080 ocupado: detener la instancia anterior; alternativamente usar
-  `SERVER_PORT=8081` en el entorno y cambiar ambas URLs al puerto elegido.
+- Puerto 8080 ocupado: cerrar la otra instancia si se utiliza el lanzador demo,
+  que fija el puerto 8080. En un arranque manual dev/prod, se puede establecer
+  `SERVER_PORT=8081` y abrir ambas URLs en el puerto elegido.
 - Configuración administrativa ausente/inválida: generar BCrypt y exportar ambas
   variables en la misma terminal. El hash no lleva el prefijo `{bcrypt}`.
 - El generador no encuentra consola: usar una terminal real sin tuberías ni
@@ -169,9 +175,11 @@ Verificaciones adicionales realizadas (no sumadas al recuento de suites):
 El primer arranque de comprobación falló porque 8080 ya estaba ocupado. Se usó
 SERVER_PORT con un puerto local libre para las verificaciones posteriores; no
 se detuvo la instancia existente. No se modificó la configuración del proyecto.
-Windows/PowerShell no estaba disponible: sus comandos son una alternativa
-orientativa, no una validación ejecutada. Tampoco se repitieron pruebas visuales
-de navegador; las pruebas manuales previas fueron confirmadas por el usuario.
+En esa verificación del 2026-10-11 no se ejecutó la alternativa avanzada
+de PowerShell en Windows; sus comandos quedaron como orientación técnica.
+Tampoco se repitieron pruebas visuales de navegador en esa sesión.
+Posteriormente, el propietario confirmó el arranque del lanzador demo en
+Windows 10 y el funcionamiento correcto de la interfaz.
 
 SHA-256 de todos los archivos de data/ idéntico antes/después. Revisión del árbol
 actual y ocho commits previos (126 blobs únicos), sin secretos reales ni bases

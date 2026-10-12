@@ -164,9 +164,12 @@ desarrollo intactos por SHA-256. Detalles y límites en PRUEBAS-FRONTEND.md.
 ## Cierre para ejecución local — 2026-10-11
 
 El alcance vigente se limita a clonar y ejecutar localmente, sin despliegue.
-El Inicio rápido del README genera BCrypt con scripts/GenerarHash.java usando
-entrada de consola sin eco y archivo temporal privado; no incluye secretos
-predeterminados. Usar dev y loopback. No compartir archivos ni entorno del proceso.
+El [README](../README.md) explica el modo demo con admin/admin, limitado a
+127.0.0.1 y destinado exclusivamente a evaluación local. Para utilizar dev
+con credenciales propias, [EJECUCION-LOCAL.md](EJECUCION-LOCAL.md) describe
+la generación de BCrypt con scripts/GenerarHash.java y la configuración del
+entorno. Producción también exige credenciales propias. No compartir archivos
+de credenciales ni variables del proceso.
 
 Se revisaron los ocho commits alcanzables por las referencias Git locales
 (126 blobs únicos) y los archivos de esta entrega: no se identificaron secretos

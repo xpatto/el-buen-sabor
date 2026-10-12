@@ -2,11 +2,12 @@
 
 ## Arranque local y credenciales
 
-Requiere Java 21. Primero ejecutar ./mvnw package para disponer del JAR y las
-dependencias. El perfil dev escucha únicamente en 127.0.0.1 por HTTP.
+Para una revisión rápida en modo demo, sigue el inicio automático descrito en
+[README](../README.md); no requiere credenciales propias ni empaquetado manual.
 
-Configurar ADMIN_USERNAME y ADMIN_PASSWORD_HASH siguiendo el Inicio rápido
-del [README](../README.md) y las alternativas de [EJECUCION-LOCAL.md](EJECUCION-LOCAL.md).
+Las instrucciones de esta sección corresponden al perfil dev: requieren JDK 21,
+escuchan en 127.0.0.1 y necesitan ADMIN_USERNAME y ADMIN_PASSWORD_HASH,
+configurados mediante [EJECUCION-LOCAL.md](EJECUCION-LOCAL.md).
 La utilidad scripts/GenerarHash.java utiliza las dependencias resueltas por Maven,
 lee la contraseña sin eco y escribe el hash en un archivo temporal privado.
 No usar las credenciales ficticias de pruebas ni guardar secretos en Git.

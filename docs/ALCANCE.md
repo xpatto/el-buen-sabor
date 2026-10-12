@@ -72,7 +72,7 @@ La etapa 3 no incorporó operaciones de escritura ni interfaces definitivas.
 - Perfil dev local y prod con HTTPS público 443, proxy confiable explícito,
   cookies Secure/HttpOnly/SameSite=Lax y cabeceras de seguridad.
 - Pruebas MockMvc y Tomcat real con SQLite aislado. Resultados de cierre
-  en README.md y SEGURIDAD.md.
+  en docs/SEGURIDAD.md.
 - La entrega de etapa 4 se limitó al commit local, sin CRUD administrativo
   ni avance a etapa 5. El despliegue público requiere resolver los riesgos
   operativos documentados en SEGURIDAD.md.
@@ -178,7 +178,8 @@ rutas con espacios y mensajes de inicio. Windows arranca el wrapper oficial
 mediante Java para no depender de PowerShell; no cambian sus versiones ni las
 dependencias de la aplicación. SQLite demo es independiente, persistente y usa
 el esquema, migración y semillas existentes. No se cambian APIs ni interfaz.
-El inicio rápido demo precede a las instrucciones avanzadas anteriores.
+El README presenta el inicio rápido demo; las instrucciones avanzadas
+con credenciales propias se conservan en docs/EJECUCION-LOCAL.md.
 
 ## Fuera del alcance
 
@@ -188,11 +189,10 @@ El inicio rápido demo precede a las instrucciones avanzadas anteriores.
 
 ## Versionado y entrega
 
-La entrega queda preparada para revisión pública del código y ejecución local,
-con commits ordenados y README de inicio rápido. GitHub ya está configurado con el remoto `origin` hacia
-`https://github.com/xpatto/el-buen-sabor.git`. En esta etapa se realiza un commit
-local después de ejecutar y comunicar las pruebas. Cualquier push o cambio de
-visibilidad requiere autorización explícita; no se realizan cambios remotos.
+El repositorio es público y puede clonarse sin iniciar sesión desde
+`https://github.com/xpatto/el-buen-sabor.git`. El README presenta el proyecto
+y el inicio rápido local; los documentos técnicos permanecen en `docs/`.
+Las futuras modificaciones deben revisarse y publicarse con autorización.
 
 Cierre de etapa 4 (2026-10-09): `./mvnw clean test` y `./mvnw package`
 terminaron con BUILD SUCCESS; cada comando ejecutó 113 pruebas, con 0 fallidas,
@@ -230,6 +230,7 @@ pasó el caso ZIP sin permisos ejecutables y la detección de puerto ocupado.
 Chromium verificó siete tarjetas, variaciones, filtros, ausencia de enlace
 administrativo y login/panel. Ctrl+C cerró Tomcat y SQLite; el reinicio conservó
 una edición y una eliminación. Los archivos originales de data/ conservaron
-su SHA-256. Windows recibió revisión estática de sintaxis, comillas y flujo;
-el bootstrap Java descargó/verificó el wrapper y compiló en Linux. **No se ha
-ejecutado el lanzador en Windows 10 real.** Sin push, despliegue ni etapas nuevas.
+su SHA-256. Durante la implementación, Windows recibió revisión estática; el bootstrap
+Java se comprobó en Linux. Posteriormente, el propietario probó el lanzador
+en Windows 10 y confirmó el arranque y el funcionamiento de la página.
+No se ha realizado un despliegue web.
